@@ -1,0 +1,14 @@
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/build/
+
+# Backend
+backend/target/
+backend/.env
+backend/src/main/resources/application-local.properties
+
+# IDE
+.idea/
+.vscode/
+*.iml
