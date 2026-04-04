@@ -20,7 +20,9 @@ public class GeminiService {
     @Value("${gemini.api.url:https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent}")
     private String geminiApiUrl;
     
+    @SuppressWarnings("unused")
     private final RestTemplate restTemplate = new RestTemplate();
+    @SuppressWarnings("unused")
     private final ObjectMapper objectMapper = new ObjectMapper();
     
     public StructuredSymptoms analyzeSymptoms(String symptoms) {
@@ -43,8 +45,10 @@ public class GeminiService {
             HttpHeaders headers = new HttpHeaders();
             headers.setContentType(MediaType.APPLICATION_JSON);
             
+            @SuppressWarnings("unused")
             HttpEntity<Map<String, Object>> entity = new HttpEntity<>(request, headers);
             
+            @SuppressWarnings("unused")
             String url = geminiApiUrl + "?key=" + geminiApiKey;
             
             // Make API call (implementation depends on Gemini API response format)
