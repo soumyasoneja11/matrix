@@ -1,20 +1,24 @@
 export type TriageLevel = 'CRITICAL' | 'URGENT' | 'STANDARD';
 
 export interface Patient {
-  id: number;
+  id: number | string;
   name: string;
   age?: number;
   gender?: string;
   chiefComplaint?: string;
-  symptoms?: string;
-  vitalSigns?: string;
-  painLevel?: number;
   triageLevel: TriageLevel;
-  status: string;
+  status?: string;
   zoneName?: string;
   roomCode?: string;
   assignedNurse?: string;
   assignedDoctor?: string;
+  symptoms?: string[];
+  vitals?: {
+    heartRate?: number;
+    bloodPressure?: string;
+    temperature?: number;
+    oxygenSaturation?: number;
+  };
   createdAt?: string;
   updatedAt?: string;
 }
@@ -22,29 +26,16 @@ export interface Patient {
 export interface Zone {
   id: number;
   name: string;
-  severityBand: string;
-  description?: string;
-  rooms?: Room[];
+  severityBand: TriageLevel;
+  description: string;
 }
 
 export interface Room {
   id: number;
   roomCode: string;
   zoneId: number;
-  zoneName?: string;
+  zoneName: string;
   equipment: string[];
   occupied: boolean;
   patientId?: number;
-}
-
-export interface TriageRequest {
-  patientDetails: string;
-  language?: string;
-}
-
-export interface TriageResponse {
-  patient: Patient;
-  triageLevel: TriageLevel;
-  reasoning?: string;
-  suggestedZone?: string;
 }

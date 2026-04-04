@@ -1,23 +1,39 @@
-export type Role = 'ADMIN' | 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST';
+export type Role = 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST';
+
+export type Department =
+  | 'EMERGENCY_DEPARTMENT'
+  | 'CARDIOLOGY'
+  | 'NEUROLOGY'
+  | 'ORTHOPEDICS'
+  | 'PULMONOLOGY'
+  | 'GASTROENTEROLOGY'
+  | 'SURGERY'
+  | 'ALLERGY'
+  | 'ENDOCRINOLOGY'
+  | 'GENERAL_MEDICINE'
+  | 'GYNECOLOGY'
+  | 'ADMINISTRATION'
+  | 'OPERATIONS'
+  | 'FRONT_DESK';
 
 export interface Staff {
-  id: number;
+  id: string | number;
   fullName: string;
   username: string;
   email: string;
-  role: Role;
+  role: string;
   department: string;
-  status: 'ACTIVE' | 'INACTIVE' | 'ON_CALL';
-  assignedZone?: string;
-  assignedPatients?: number[];
+  status?: 'online' | 'busy' | 'offline' | 'ACTIVE';
+  avatar?: string;
 }
 
-export interface StaffAssignment {
-  staffId: number;
-  staffName: string;
+export interface SignupPayload {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
   role: Role;
-  assignedZone?: string;
-  assignedPatients: { id: number; name: string; triageLevel: string }[];
+  department: string;
 }
 
 export interface AuthUser {
@@ -25,7 +41,7 @@ export interface AuthUser {
   username: string;
   fullName: string;
   email: string;
-  role: Role;
+  role: string;
   department: string;
   token: string;
 }
@@ -42,4 +58,12 @@ export interface SignUpRequest {
   password: string;
   role: Role;
   department: string;
+}
+
+export interface StaffAssignment {
+  staffId: number;
+  staffName: string;
+  role: string;
+  assignedZone: string;
+  assignedPatients: { id: number; name: string; triageLevel: string }[];
 }
