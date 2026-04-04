@@ -34,6 +34,7 @@ export function TextAreaField({
         </label>
       )}
       <textarea
+        name={name}
         value={value}
         onChange={onChange}
         placeholder={placeholder}
@@ -99,6 +100,7 @@ export function SelectField({
         </label>
       )}
       <select
+        name={name}
         value={value}
         onChange={onChange}
         disabled={disabled}
@@ -177,6 +179,7 @@ export function InputField({
           </div>
         )}
         <input
+          name={name}
           type={type}
           name={name}
           value={value}
