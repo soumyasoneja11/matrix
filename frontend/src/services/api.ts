@@ -85,12 +85,5 @@ export const authAPI = {
   }) => api.post('/auth/signup', data),
 };
 
-export const patientAPI = {
-  triage: (data: { patientDetails: string; language: string }) =>
-    api.post('/patients/triage', data),
-  getAll: () => api.get('/patients'),
-  getById: (id: number) => api.get(`/patients/${id}`),
-  delete: (id: number) => api.delete(`/patients/${id}`),
-};
 
 export default api;
