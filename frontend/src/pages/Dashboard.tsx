@@ -10,15 +10,18 @@ import { motion } from 'framer-motion';
 const Dashboard = () => {
   const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
 
   const loadPatients = async () => {
     try {
       const data = await fetchPatients();
-      setPatients(data);
+      setPatients(data || []);
+      setError(null);
       setLastUpdate(new Date());
-    } catch (error) {
-      console.error('Failed to load patients:', error);
+    } catch (err: any) {
+      console.error('Failed to load patients:', err);
+      setError(err.message || 'Unable to connect to the medical data service.');
     } finally {
       setLoading(false);
     }
@@ -62,7 +65,21 @@ const Dashboard = () => {
           <PatientTriageForm onPatientAdded={loadPatients} />
         </div>
         <div className="lg:col-span-2">
-          {loading ? (
+          {error ? (
+            <div className="glass-card p-12 text-center border-red-500/20">
+              <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
+                <FaChartLine className="text-red-400" />
+              </div>
+              <h3 className="text-xl font-bold text-white mb-2">Sync Error</h3>
+              <p className="text-white/60 mb-6">{error}</p>
+              <button 
+                onClick={loadPatients}
+                className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all"
+              >
+                Retry Connection
+              </button>
+            </div>
+          ) : loading ? (
             <div className="glass-card p-12 text-center">
               <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4" />
               <p className="text-white/60">Loading triage dashboard...</p>

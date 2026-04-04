@@ -1,7 +1,7 @@
 export type TriageLevel = 'CRITICAL' | 'URGENT' | 'STANDARD';
 
 export interface Patient {
-  id: number | string;
+  id: string; // Unified to string for MongoDB compatibility
   name: string;
   age?: number;
   gender?: string;
@@ -24,18 +24,18 @@ export interface Patient {
 }
 
 export interface Zone {
-  id: number;
+  id: string;
   name: string;
   severityBand: TriageLevel;
   description: string;
 }
 
 export interface Room {
-  id: number;
+  id: string;
   roomCode: string;
-  zoneId: number;
+  zoneId: string;
   zoneName: string;
   equipment: string[];
   occupied: boolean;
-  patientId?: number;
+  patientId?: string;
 }

@@ -33,6 +33,7 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
   const [language, setLanguage] = useState('en-US');
   const [patientText, setPatientText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const { isListening, startListening, stopListening, transcript, resetTranscript } =
     useVoiceRecognition({ language });
 
@@ -43,12 +44,16 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
   const handleAnalyze = async () => {
     if (!patientText.trim()) return;
     setAnalyzing(true);
+    setError(null);
     try {
       await patientAPI.triage({ patientDetails: patientText, language });
       onRefresh();
       setPatientText('');
       resetTranscript();
-    } catch {} finally { setAnalyzing(false); }
+    } catch (err: any) {
+      setError(err.message || 'Analysis failed. Please check your connection and try again.');
+      console.error('Triage analysis failed:', err);
+    } finally { setAnalyzing(false); }
   };
 
   const handleClear = () => { setPatientText(''); resetTranscript(); };
@@ -186,6 +191,13 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
                 className="!rounded-2xl !border-forest-200/70 focus:!border-primary-400 !bg-white/80 !text-forest-900"
               />
             </div>
+
+            {error && (
+              <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl text-red-600 text-sm flex items-center gap-3">
+                <AlertCircle size={18} />
+                {error}
+              </div>
+            )}
 
             <div className="flex gap-4">
               <Button 
@@ -331,12 +343,12 @@ function PatientCardEnhanced({ patient, color, index }: { patient: Patient; colo
       className={`bg-white/90 rounded-xl p-4 shadow-sm border-l-4 ${borderColor} hover:shadow-md transition-all cursor-pointer`}
     >
       <div className="flex justify-between items-start mb-2">
-        <h4 className="font-bold text-forest-900">{patient.name || 'Unnamed Patient'}</h4>
+        <h4 className="font-bold text-forest-900 line-clamp-1">{patient.name || 'Unnamed Patient'}</h4>
         <Badge variant={color === 'red' ? 'critical' : color === 'amber' ? 'urgent' : 'standard'} className="text-[10px]">
-          {patient.triageLevel}
+          {patient.triageLevel || 'UNKNOWN'}
         </Badge>
       </div>
-      {patient.age && (
+      {(patient.age !== undefined && patient.age !== null) && (
         <p className="text-xs text-forest-500 mb-1 flex items-center gap-1">
           <span className="font-medium">Age:</span> {patient.age}
         </p>

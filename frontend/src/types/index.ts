@@ -12,7 +12,7 @@ export interface Vitals {
 }
 
 export interface Patient {
-  id: number;
+  id: string;
   name?: string;
   age?: number;
   description: string;
@@ -25,7 +25,7 @@ export interface Patient {
 }
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: string;
@@ -33,20 +33,25 @@ export interface User {
 }
 
 export interface ResourceRoom {
-  id: number;
+  id: string;
   name: string;
   type: string;
   isAvailable: boolean;
-  currentPatientId?: number;
+  currentPatientId?: string;
 }
 
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   description: string;
   status: 'pending' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
-  assignedTo: number;
-  patientId?: number;
+  assignedTo: string;
+  patientId?: string;
   createdAt: string;
+}
+
+export interface TriageRequest {
+  patientDetails: string;
+  language?: string;
 }

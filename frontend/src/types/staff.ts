@@ -17,7 +17,7 @@ export type Department =
   | 'FRONT_DESK';
 
 export interface Staff {
-  id: string | number;
+  id: string; // Unified to string for MongoDB compatibility
   fullName: string;
   username: string;
   email: string;
@@ -37,7 +37,7 @@ export interface SignupPayload {
 }
 
 export interface AuthUser {
-  id: number;
+  id: string; // Unified to string
   username: string;
   fullName: string;
   email: string;
@@ -61,9 +61,9 @@ export interface SignUpRequest {
 }
 
 export interface StaffAssignment {
-  staffId: number;
+  staffId: string; // Unified to string
   staffName: string;
   role: string;
   assignedZone: string;
-  assignedPatients: { id: number; name: string; triageLevel: string }[];
+  assignedPatients: { id: string; name: string; triageLevel: string }[];
 }

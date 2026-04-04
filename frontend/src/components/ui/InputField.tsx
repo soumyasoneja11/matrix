@@ -2,6 +2,7 @@ import React from 'react';
 
 interface TextAreaFieldProps {
   label?: string;
+  name?: string;
   placeholder?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLTextAreaElement>) => void;
@@ -14,6 +15,7 @@ interface TextAreaFieldProps {
 
 export function TextAreaField({
   label,
+  name,
   placeholder,
   value,
   onChange,
@@ -67,6 +69,7 @@ export function TextAreaField({
 
 interface SelectFieldProps {
   label?: string;
+  name?: string;
   value: string;
   onChange: (e: React.ChangeEvent<HTMLSelectElement>) => void;
   options: Array<{ value: string; label: string }>;
@@ -78,6 +81,7 @@ interface SelectFieldProps {
 
 export function SelectField({
   label,
+  name,
   value,
   onChange,
   options,
@@ -133,6 +137,7 @@ export function SelectField({
 
 interface InputFieldProps {
   label?: string;
+  name?: string;
   type?: 'text' | 'email' | 'password' | 'number' | 'tel' | 'url';
   placeholder?: string;
   value: string;
@@ -146,6 +151,7 @@ interface InputFieldProps {
 
 export function InputField({
   label,
+  name,
   type = 'text',
   placeholder,
   value,
@@ -172,6 +178,7 @@ export function InputField({
         )}
         <input
           type={type}
+          name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}
