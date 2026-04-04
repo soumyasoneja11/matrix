@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom';
 import { 
+  FaHome,
   FaUserInjured, 
   FaBed, 
   FaUsers, 
@@ -12,7 +13,8 @@ import {
 import { motion } from 'framer-motion';
 
 const navItems = [
-  { path: '/', icon: FaUserInjured, label: 'Patient Triage', color: 'from-cyan-500 to-blue-500' },
+  { path: '/', icon: FaHome, label: 'Home', color: 'from-primary-500 to-purple-500' },
+  { path: '/triage', icon: FaUserInjured, label: 'Patient Triage', color: 'from-cyan-500 to-blue-500' },
   { path: '/resource-allocation', icon: FaBed, label: 'Resource Allocation', color: 'from-green-500 to-emerald-500' },
   { path: '/staff-directory', icon: FaUsers, label: 'Staff Directory', color: 'from-purple-500 to-pink-500' },
   { path: '/staff-management', icon: FaUserCog, label: 'Staff Management', color: 'from-orange-500 to-red-500' },
@@ -46,6 +48,7 @@ const Sidebar = () => {
           <NavLink
             key={item.path}
             to={item.path}
+            end={item.path === '/'}
             className={({ isActive }) => `
               flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group
               ${isActive 

@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/contexts/AuthContext';
 import MainLayout from './layouts/MainLayout';
+import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
 import ResourceAllocation from './pages/ResourceAllocation';
 import StaffDirectory from './pages/StaffDirectory';
@@ -37,19 +38,22 @@ function App() {
 
   // Authenticated → show main app
   return (
-    <MainLayout>
-      <Routes>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/triage" element={<Dashboard />} />
-        <Route path="/resource-allocation" element={<ResourceAllocation />} />
-        <Route path="/staff-directory" element={<StaffDirectory />} />
-        <Route path="/staff-management" element={<StaffManagement />} />
-        <Route path="/my-worklist" element={<MyWorklist />} />
-        <Route path="/analytics" element={<Analytics />} />
-        <Route path="/recycle-bin" element={<RecycleBin />} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </MainLayout>
+    <Routes>
+      {/* Home Page — full-screen, no layout wrapper */}
+      <Route path="/" element={<HomePage />} />
+      <Route path="/home" element={<HomePage />} />
+
+      {/* Dashboard pages — wrapped in MainLayout */}
+      <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+      <Route path="/triage" element={<MainLayout><Dashboard /></MainLayout>} />
+      <Route path="/resource-allocation" element={<MainLayout><ResourceAllocation /></MainLayout>} />
+      <Route path="/staff-directory" element={<MainLayout><StaffDirectory /></MainLayout>} />
+      <Route path="/staff-management" element={<MainLayout><StaffManagement /></MainLayout>} />
+      <Route path="/my-worklist" element={<MainLayout><MyWorklist /></MainLayout>} />
+      <Route path="/analytics" element={<MainLayout><Analytics /></MainLayout>} />
+      <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
   );
 }
 

@@ -85,4 +85,5 @@ export const authAPI = {
   }) => api.post('/auth/signup', data),
 };
 
+
 export default api;

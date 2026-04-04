@@ -1,6 +1,7 @@
 import React from 'react';
 import Sidebar from '../components/sidebar';
 import Header from '../components/Header';
+import Footer from '../components/Footer';
 
 interface MainLayoutProps {
   children: React.ReactNode;
@@ -16,6 +17,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           <div className="animate-fade-in">
             {children}
           </div>
+          <Footer />
         </main>
       </div>
     </div>
