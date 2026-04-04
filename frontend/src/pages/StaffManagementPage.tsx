@@ -42,7 +42,7 @@ export function StaffManagementPage() {
       </div>
 
       {error && (
-        <Card className="!bg-red-50/60 border-red-200/60">
+        <Card className="bg-red-50/60! border-red-200/60">
           <p className="text-sm text-red-600">{error}</p>
         </Card>
       )}
@@ -68,7 +68,7 @@ export function StaffManagementPage() {
             >
               <Card hover>
                 <div className="flex items-center gap-3 mb-3">
-                  <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs">
+                  <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-xs">
                     {assign.staffName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div>

@@ -13,6 +13,7 @@ public class WebSocketController {
     @SendTo("/topic/messages")
     public String handleMessage(@Payload String message, SimpMessageHeaderAccessor headerAccessor) {
         // Extract user session info if needed
+        @SuppressWarnings("unused")
         String sessionId = headerAccessor.getSessionId();
         
         // Echo message back to all subscribers

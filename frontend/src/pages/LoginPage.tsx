@@ -34,7 +34,7 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
       {/* Background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-primary-100/30 to-blue-50" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary-50 via-primary-100/30 to-blue-50" />
       <div
         className="absolute inset-0 opacity-5"
         style={{ backgroundImage: `url(${hospitalBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
@@ -53,7 +53,7 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
         <div className="glass rounded-3xl p-8 shadow-2xl">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg mb-4">
+            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg mb-4">
               <Stethoscope size={28} className="text-white" />
             </div>
             <h1 className="text-2xl font-bold text-primary-900 tracking-tight">ER Triage Sprint</h1>

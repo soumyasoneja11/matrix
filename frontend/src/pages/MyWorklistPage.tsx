@@ -51,7 +51,7 @@ export function MyWorklistPage() {
       </div>
 
       {!isAllowed ? (
-        <Card className="!bg-amber-50/60">
+        <Card className="bg-amber-50/60!">
           <EmptyState
             icon={<ShieldAlert size={48} />}
             title="Role-based access"
@@ -63,7 +63,7 @@ export function MyWorklistPage() {
           <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
         </div>
       ) : error ? (
-        <Card className="!bg-red-50/60">
+        <Card className="bg-red-50/60!">
           <p className="text-sm text-red-600">{error}</p>
         </Card>
       ) : worklist.length === 0 ? (

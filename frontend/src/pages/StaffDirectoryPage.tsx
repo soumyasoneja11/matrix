@@ -104,7 +104,7 @@ export function StaffDirectoryPage() {
               onClick={() => setFilter(rf.value)}
               className={`px-4 py-2 rounded-full text-xs font-medium transition-all cursor-pointer ${
                 filter === rf.value
-                  ? 'bg-gradient-to-r from-primary-600 to-primary-700 text-white shadow-md'
+                  ? 'bg-linear-to-r from-primary-600 to-primary-700 text-white shadow-md'
                   : 'bg-white/50 text-gray-600 hover:bg-white/80 border border-gray-200/60'
               }`}
             >
@@ -148,7 +148,7 @@ export function StaffDirectoryPage() {
                 </div>
 
                 <div className="flex items-start gap-3 mb-3">
-                  <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
+                  <div className="w-11 h-11 rounded-xl bg-linear-to-br from-primary-400 to-primary-600 flex items-center justify-center text-white font-bold text-sm shrink-0">
                     {member.fullName.split(' ').map((n) => n[0]).join('').slice(0, 2)}
                   </div>
                   <div className="min-w-0">
@@ -168,10 +168,10 @@ export function StaffDirectoryPage() {
                 </div>
 
                 <div className="flex gap-2 pt-2 border-t border-gray-100/60">
-                  <Button variant="ghost" size="sm" className="flex-1 !rounded-xl !text-xs">
+                  <Button variant="ghost" size="sm" className="flex-1 rounded-xl! text-xs!">
                     <Pencil size={12} /> Edit
                   </Button>
-                  <Button variant="ghost" size="sm" className="flex-1 !rounded-xl !text-xs !text-red-500 hover:!bg-red-50/60" onClick={() => handleRemove(member.id)}>
+                  <Button variant="ghost" size="sm" className="flex-1 rounded-xl! text-xs! text-red-500! hover:bg-red-50/60!" onClick={() => handleRemove(member.id)}>
                     <Trash2 size={12} /> Remove
                   </Button>
                 </div>

@@ -78,7 +78,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
 
   return (
     <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-primary-50 via-primary-100/30 to-blue-50" />
+      <div className="absolute inset-0 bg-linear-to-br from-primary-50 via-primary-100/30 to-blue-50" />
       <div className="absolute top-10 right-20 w-80 h-80 bg-primary-300/20 rounded-full blur-3xl" />
       <div className="absolute bottom-10 left-10 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl" />
 
@@ -90,7 +90,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
       >
         <div className="glass rounded-3xl p-8 shadow-2xl">
           <div className="flex flex-col items-center mb-6">
-            <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg mb-3">
+            <div className="w-14 h-14 rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg mb-3">
               <Stethoscope size={24} className="text-white" />
             </div>
             <h1 className="text-xl font-bold text-primary-900">Create Account</h1>

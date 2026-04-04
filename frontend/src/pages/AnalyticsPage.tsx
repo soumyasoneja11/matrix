@@ -39,7 +39,7 @@ export function AnalyticsPage({ patients }: AnalyticsPageProps) {
           <motion.div key={i} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }}>
             <Card hover>
               <div className="flex items-start justify-between mb-3">
-                <div className={`w-11 h-11 rounded-2xl bg-gradient-to-br ${kpi.color} flex items-center justify-center text-white shadow-lg`}>
+                <div className={`w-11 h-11 rounded-2xl bg-linear-to-br ${kpi.color} flex items-center justify-center text-white shadow-lg`}>
                   {kpi.icon}
                 </div>
                 <span className={`flex items-center gap-0.5 text-xs font-medium ${kpi.positive ? 'text-green-600' : 'text-red-600'}`}>
@@ -81,7 +81,7 @@ export function AnalyticsPage({ patients }: AnalyticsPageProps) {
           <h3 className="text-lg font-semibold text-gray-800 mb-4">Patient Flow Trends</h3>
           <div className="flex items-end gap-2 h-48 pt-4">
             {Array.from({ length: 12 }).map((_, i) => (
-              <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${20 + Math.random() * 80}%` }} transition={{ duration: 0.5, delay: i * 0.05 }} className="flex-1 bg-gradient-to-t from-primary-500 to-primary-300 rounded-t-lg" />
+              <motion.div key={i} initial={{ height: 0 }} animate={{ height: `${20 + Math.random() * 80}%` }} transition={{ duration: 0.5, delay: i * 0.05 }} className="flex-1 bg-linear-to-t from-primary-500 to-primary-300 rounded-t-lg" />
             ))}
           </div>
           <div className="flex justify-between mt-2 text-[10px] text-gray-400">

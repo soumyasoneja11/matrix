@@ -85,7 +85,7 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
       <Card className="overflow-hidden" padding="none">
         <div className="p-8">
           <div className="flex items-start gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 flex items-center justify-center shrink-0">
+            <div className="w-10 h-10 rounded-xl bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center shrink-0">
               <Sparkles size={18} className="text-white" />
             </div>
             <div>
@@ -111,8 +111,8 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
                   whileTap={{ scale: 0.95 }}
                   className={`relative w-20 h-20 rounded-full flex items-center justify-center cursor-pointer transition-all duration-300 ${
                     isListening
-                      ? 'bg-gradient-to-br from-red-400 to-red-600 animate-pulse-glow'
-                      : 'bg-gradient-to-br from-primary-400 to-primary-600 hover:from-primary-500 hover:to-primary-700'
+                      ? 'bg-linear-to-br from-red-400 to-red-600 animate-pulse-glow'
+                      : 'bg-linear-to-br from-primary-400 to-primary-600 hover:from-primary-500 hover:to-primary-700'
                   } shadow-xl`}
                 >
                   {isListening && (
@@ -165,16 +165,16 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
 
             {/* RIGHT: Capsule Visualizer */}
             <div className="hidden lg:flex justify-center">
-              <div className="relative w-44 h-80 rounded-[4rem] bg-gradient-to-b from-primary-800/90 to-primary-950/95 backdrop-blur-xl border border-primary-700/30 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
+              <div className="relative w-44 h-80 rounded-[4rem] bg-linear-to-b from-primary-800/90 to-primary-950/95 backdrop-blur-xl border border-primary-700/30 flex flex-col items-center justify-center overflow-hidden shadow-2xl">
                 {/* Glass overlay */}
-                <div className="absolute inset-0 bg-gradient-to-b from-white/10 to-transparent rounded-[4rem]" />
+                <div className="absolute inset-0 bg-linear-to-b from-white/10 to-transparent rounded-[4rem]" />
 
                 {/* Waveform bars */}
                 <div className="flex items-end gap-1 h-24 relative z-10">
                   {Array.from({ length: 12 }).map((_, i) => (
                     <motion.div
                       key={i}
-                      className="w-1.5 rounded-full bg-gradient-to-t from-primary-400 to-primary-300"
+                      className="w-1.5 rounded-full bg-linear-to-t from-primary-400 to-primary-300"
                       animate={isListening ? {
                         height: [8, 30 + Math.random() * 40, 8],
                       } : { height: 8 }}
@@ -209,7 +209,7 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
               { icon: <Brain size={20} />, title: 'Extract symptoms', desc: 'Convert raw speech into structured symptoms, vitals, and history.' },
               { icon: <CheckCircle2 size={20} />, title: 'Set triage priority', desc: 'Generate first-urgency guidance for immediate emergency action.' },
             ].map((f, i) => (
-              <Card key={i} variant="solid" padding="sm" hover className="!rounded-2xl !bg-white/50 !border-0 !shadow-none hover:!bg-white/80">
+              <Card key={i} variant="solid" padding="sm" hover className="rounded-2xl! bg-white/50! border-0! shadow-none! hover:bg-white/80!">
                 <div className="flex items-start gap-3 p-2">
                   <div className="text-primary-600 mt-0.5">{f.icon}</div>
                   <div>
