@@ -1,10 +1,10 @@
 import { motion } from 'framer-motion';
-import { FaBed, FaProcedures, FaSyringe, FaAmbulance } from 'react-icons/fa';
+import { FaBed, FaLungs, FaSyringe, FaAmbulance } from 'react-icons/fa';
 
 const ResourceAllocation = () => {
   const resources = [
     { icon: FaBed, name: 'ICU Beds', available: 8, total: 15, color: 'from-red-500 to-pink-500' },
-    { icon: FaProcedures, name: 'Ventilators', available: 12, total: 20, color: 'from-blue-500 to-cyan-500' },
+    { icon: FaLungs, name: 'Ventilators', available: 12, total: 20, color: 'from-blue-500 to-cyan-500' },
     { icon: FaSyringe, name: 'Emergency Kits', available: 45, total: 50, color: 'from-green-500 to-emerald-500' },
     { icon: FaAmbulance, name: 'Ambulances', available: 3, total: 5, color: 'from-yellow-500 to-orange-500' },
   ];
