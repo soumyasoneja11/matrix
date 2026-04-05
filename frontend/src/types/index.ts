@@ -1,8 +1,27 @@
-export enum TriageLevel {
-  CRITICAL = 'CRITICAL',
-  URGENT = 'URGENT',
-  STANDARD = 'STANDARD',
-}
+export const TriageLevel = {
+  CRITICAL: 'CRITICAL',
+  URGENT: 'URGENT',
+  STANDARD: 'STANDARD',
+} as const;
+
+export type TriageLevel = typeof TriageLevel[keyof typeof TriageLevel];
+export type Role = 'ADMIN' | 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST';
+
+export type Department =
+  | 'EMERGENCY_DEPARTMENT'
+  | 'CARDIOLOGY'
+  | 'NEUROLOGY'
+  | 'ORTHOPEDICS'
+  | 'PULMONOLOGY'
+  | 'GASTROENTEROLOGY'
+  | 'SURGERY'
+  | 'ALLERGY'
+  | 'ENDOCRINOLOGY'
+  | 'GENERAL_MEDICINE'
+  | 'GYNECOLOGY'
+  | 'ADMINISTRATION'
+  | 'OPERATIONS'
+  | 'FRONT_DESK';
 
 export interface Vitals {
   heartRate?: number;
@@ -12,20 +31,45 @@ export interface Vitals {
 }
 
 export interface Patient {
-  id: number;
-  name?: string;
+  id: string; // Unified to string for MongoDB compatibility
+  name: string;
   age?: number;
-  description: string;
+  gender?: string;
+  chiefComplaint?: string;
+  description?: string;
   triageLevel: TriageLevel;
+  status?: string;
+  zoneName?: string;
+  roomCode?: string;
+  assignedNurse?: string;
+  assignedDoctor?: string;
+  symptoms?: string[];
+  vitals?: Vitals;
   assignedStaff?: string;
   location?: string;
-  vitals?: Vitals;
-  createdAt: string;
-  updatedAt: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
+export interface Zone {
+  id: string;
+  name: string;
+  severityBand: TriageLevel;
+  description: string;
+}
+
+export interface Room {
+  id: string;
+  roomCode: string;
+  zoneId: string;
+  zoneName: string;
+  equipment: string[];
+  occupied: boolean;
+  patientId?: string;
 }
 
 export interface User {
-  id: number;
+  id: string;
   username: string;
   email: string;
   role: string;
@@ -33,20 +77,77 @@ export interface User {
 }
 
 export interface ResourceRoom {
-  id: number;
+  id: string;
   name: string;
   type: string;
   isAvailable: boolean;
-  currentPatientId?: number;
+  currentPatientId?: string;
 }
 
 export interface Task {
-  id: number;
+  id: string;
   title: string;
   description: string;
   status: 'pending' | 'in-progress' | 'completed';
   priority: 'low' | 'medium' | 'high';
-  assignedTo: number;
-  patientId?: number;
+  assignedTo: string;
+  patientId?: string;
   createdAt: string;
+}
+
+export interface TriageRequest {
+  patientDetails: string;
+  language?: string;
+}
+
+export interface Staff {
+  id: string; // Unified to string for MongoDB compatibility
+  fullName: string;
+  username: string;
+  email: string;
+  role: string;
+  department: string;
+  status?: 'online' | 'busy' | 'offline' | 'ACTIVE';
+  avatar?: string;
+}
+
+export interface SignupPayload {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  role: Role;
+  department: string;
+}
+
+export interface AuthUser {
+  id: string; // Unified to string
+  username: string;
+  fullName: string;
+  email: string;
+  role: string;
+  department: string;
+  token: string;
+}
+
+export interface LoginRequest {
+  username: string;
+  password: string;
+}
+
+export interface SignUpRequest {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  role: Role;
+  department: string;
+}
+
+export interface StaffAssignment {
+  staffId: string; // Unified to string
+  staffName: string;
+  role: string;
+  assignedZone: string;
+  assignedPatients: { id: string; name: string; triageLevel: string }[];
 }

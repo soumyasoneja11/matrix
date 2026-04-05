@@ -166,7 +166,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
             <div className="flex items-center gap-1.5 mt-0.5">
               <FaClock size={10} className={isLight ? 'text-gray-400' : 'text-white/35'} />
               <span className={`text-sm ${isLight ? 'text-gray-500' : 'text-white/55'}`}>
-                {formatDistanceToNow(new Date(patient.createdAt), { addSuffix: true })}
+                {formatDistanceToNow(new Date(patient?.createdAt || Date.now()), { addSuffix: true })}
               </span>
             </div>
           </div>

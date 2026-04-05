@@ -5,7 +5,7 @@ import { Stethoscope, UserPlus, Eye, EyeOff } from 'lucide-react';
 import { useAuth } from '../hooks/contexts/AuthContext';
 import { InputField, SelectField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
-import type { Role } from '../types/staff';
+import { Role } from '../types';
 
 interface SignUpPageProps {
   onSwitchToLogin: () => void;

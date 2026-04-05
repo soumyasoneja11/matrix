@@ -13,6 +13,8 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState('en-US');
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState(false);
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -24,12 +26,17 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
     if (!description.trim()) return;
     
     setIsSubmitting(true);
+    setError(null);
+    setSuccess(false);
     try {
       await createPatient({ description });
       setDescription('');
+      setSuccess(true);
       onPatientAdded();
-    } catch (error) {
-      console.error('Failed to create patient:', error);
+      setTimeout(() => setSuccess(false), 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to create patient record. Please try again.');
+      console.error('Failed to create patient:', err);
     } finally {
       setIsSubmitting(false);
     }
@@ -90,6 +97,18 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         </div>
         
         <VoiceCaptureButton onTranscript={handleVoiceTranscript} language={language} />
+        
+        {error && (
+          <div className="p-3 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 text-xs">
+            {error}
+          </div>
+        )}
+
+        {success && (
+          <div className="p-3 bg-green-500/10 border border-green-500/20 rounded-xl text-green-400 text-xs">
+            Patient triaged successfully!
+          </div>
+        )}
         
         <button
           onClick={handleSubmit}

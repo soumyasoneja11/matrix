@@ -5,14 +5,17 @@ import { AuthProvider } from './hooks/contexts/AuthContext'
 import { ThemeProvider } from './hooks/contexts/ThemeContext'
 import App from './App'
 import './index.css'
+import ErrorBoundary from './components/ErrorBoundary'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <BrowserRouter>
       <AuthProvider>
-        <ThemeProvider>
-          <App />
-        </ThemeProvider>
+        <ErrorBoundary>
+          <ThemeProvider>
+            <App />
+          </ThemeProvider>
+        </ErrorBoundary>  
       </AuthProvider>
     </BrowserRouter>
   </React.StrictMode>,
