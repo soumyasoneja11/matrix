@@ -8,7 +8,7 @@ import { useTheme } from '../../hooks/contexts/ThemeContext';
 interface QRModalProps {
   isOpen: boolean;
   onClose: () => void;
-  patientId: number;
+  patientId: string;
   patientName: string;
   patientLocation?: string;
 }

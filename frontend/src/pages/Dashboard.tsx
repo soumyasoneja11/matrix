@@ -3,7 +3,7 @@ import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
 import { fetchPatients } from '../services/api';
 import { Patient, TriageLevel } from '../types';
-import { motion } from 'framer-motion';
+import { Activity } from 'lucide-react';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
 const DEMO_PATIENTS: Patient[] = [
@@ -84,7 +84,7 @@ const Dashboard = () => {
           {error ? (
             <div className="glass-card p-12 text-center border-red-500/20">
               <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaChartLine className="text-red-400" />
+                <Activity className="text-red-400" />
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Sync Error</h3>
               <p className="text-white/60 mb-6">{error}</p>

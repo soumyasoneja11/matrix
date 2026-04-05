@@ -1,0 +1,39 @@
+spring:
+  application:
+    name: vitalpass-backend
+  
+  data:
+    mongodb:
+      uri: ${MONGO_URI:mongodb://localhost:27017/vitalpass}
+      auto-index-creation: true
+  
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write_dates_as_timestamps: false
+
+server:
+  port: ${PORT:8080}
+  error:
+    include-message: always
+
+# Custom AI Properties
+ai:
+  gemini:
+    key: ${GEMINI_API_KEY}
+    url: ${GEMINI_API_URL:https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent}
+  huggingface:
+    key: ${HUGGINGFACE_API_KEY}
+    url: ${HUGGING_FACE_MODEL_URL:https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2}
+
+# JWT Properties
+jwt:
+  secret: ${JWT_SECRET}
+  expiration: ${JWT_EXPIRATION:86400000}
+
+# Logging
+logging:
+  level:
+    root: INFO
+    com.mediscan: DEBUG
+    org.springframework.security: DEBUG

@@ -18,21 +18,43 @@ const api = axios.create({
   },
 });
 
+// Request interceptor — attach JWT token from localStorage to every request
+api.interceptors.request.use((config) => {
+  const stored = localStorage.getItem('er_triage_user');
+  if (stored) {
+    try {
+      const user = JSON.parse(stored);
+      if (user?.token) {
+        config.headers.Authorization = `Bearer ${user.token}`;
+      }
+    } catch {
+      // Corrupted storage — ignore
+    }
+  }
+  return config;
+});
+
 // Response interceptor for centralized error handling and data unwrapping
 api.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<any>>) => {
-    // If the backend returns a successful response wrapper, unwrap the data
     if (response.data && typeof response.data === 'object' && 'success' in response.data) {
       if (response.data.success) {
         return { ...response, data: response.data.data };
       }
-      // If success is false, throw the message as an error
       return Promise.reject(new Error(response.data.message || 'API Error'));
     }
     return response;
   },
-  (error: AxiosError<ApiResponse<any>>) => {
-    // Handle error responses (4xx, 5xx)
+  async (error: AxiosError<ApiResponse<any>>) => {
+    const config = error.config as any;
+    
+    // Simple retry logic for AI extraction (which can be flaky or timeout)
+    if (config && config.url?.includes('/triage') && (!config._retry || config._retry < 2)) {
+      config._retry = (config._retry || 0) + 1;
+      console.warn(`[API Retry] Triage failed, retrying attempt ${config._retry}...`);
+      return api(config);
+    }
+
     const message = error.response?.data?.message || error.message || 'An unexpected error occurred';
     console.error('[API Error]:', message);
     return Promise.reject(new Error(message));
@@ -67,8 +89,8 @@ export const staffAPI = {
   getAssignments: () => api.get('/staff/assignments'),
 };
 
-export const createPatient = async (data: { description: string }): Promise<Patient> => {
-  const response = await api.post<Patient>('/patients', data);
+export const createPatient = async (data: TriageRequest): Promise<Patient> => {
+  const response = await api.post<Patient>('/patients/triage', data);
   return response.data;
 };
 

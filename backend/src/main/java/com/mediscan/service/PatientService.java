@@ -1,76 +1,127 @@
 package com.mediscan.service;
 
-import com.mediscan.model.Patient;
-import com.mediscan.repository.PatientRepository;
 import com.mediscan.dto.RegistrationRequest;
+import com.mediscan.dto.ai.ExtractionResult;
+import com.mediscan.model.Patient;
+import com.mediscan.model.PatientEvent;
+import com.mediscan.model.enums.PatientStatus;
+import com.mediscan.model.enums.TriagePriority;
+import com.mediscan.repository.PatientRepository;
+import com.mediscan.repository.PatientEventRepository;
 import com.mediscan.exception.ResourceNotFoundException;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import com.mediscan.service.ai.TriageExtractor;
+import jakarta.validation.constraints.NotNull;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.validation.annotation.Validated;
+
 import java.time.LocalDateTime;
 import java.util.List;
 
-@Slf4j
 @Service
+@Validated
 public class PatientService {
-    
-    @Autowired
-    private PatientRepository patientRepository;
-    
-    public Patient registerPatient(RegistrationRequest request) {
-        log.info("Registering new patient: {}", request.getName());
-        Patient patient = new Patient();
-        patient.setName(request.getName());
-        patient.setEmail(request.getEmail());
-        patient.setPhoneNumber(request.getPhoneNumber());
-        patient.setSymptoms(request.getSymptoms());
-        patient.setRegistrationDate(LocalDateTime.now());
-        patient.setLastUpdated(LocalDateTime.now());
-        
+
+    private static final Logger log = LoggerFactory.getLogger(PatientService.class);
+
+    private final PatientRepository patientRepository;
+    private final PatientEventRepository eventRepository;
+    private final TriageExtractor triageExtractor;
+    private final TriageRulesEngine rulesEngine;
+    private final ResourceAllocator resourceAllocator;
+    private final SimpMessagingTemplate messagingTemplate;
+
+    public PatientService(PatientRepository patientRepository,
+                          PatientEventRepository eventRepository,
+                          TriageExtractor triageExtractor,
+                          TriageRulesEngine rulesEngine,
+                          ResourceAllocator resourceAllocator,
+                          SimpMessagingTemplate messagingTemplate) {
+        this.patientRepository = patientRepository;
+        this.eventRepository = eventRepository;
+        this.triageExtractor = triageExtractor;
+        this.rulesEngine = rulesEngine;
+        this.resourceAllocator = resourceAllocator;
+        this.messagingTemplate = messagingTemplate;
+    }
+
+    @Transactional
+    public Patient registerAndTriage(@NotNull RegistrationRequest request) {
+        log.info("Starting intake for patient: {}", request.getName());
+
+        // 1. AI Extraction
+        ExtractionResult extractionResult = triageExtractor.extract(request.getSymptoms());
+
+        // 2. Rules Engine
+        TriagePriority priority = rulesEngine.calculatePriority(extractionResult);
+
+        // 3. Create Patient (Mapping from Request + AI Result)
+        Patient patient = Patient.builder()
+                .name(request.getName() != null ? request.getName() : "Unknown")
+                .email(request.getEmail())
+                .phoneNumber(request.getPhoneNumber())
+                .age(extractionResult != null ? extractionResult.getAge() : 0)
+                .gender(extractionResult != null ? extractionResult.getGender() : "Not Specified")
+                .rawSymptoms(request.getSymptoms())
+                .extractedSymptoms(extractionResult != null ? extractionResult.getSymptoms() : new java.util.ArrayList<>())
+                .chiefComplaint(extractionResult != null ? extractionResult.getChiefComplaint() : "No Chief Complaint")
+                .vitals(extractionResult != null ? extractionResult.getVitals() : new Patient.Vitals())
+                .priority(priority)
+                .status(PatientStatus.TRIAGED)
+                .createdAt(LocalDateTime.now())
+                .updatedAt(LocalDateTime.now())
+                .build();
+
         Patient savedPatient = patientRepository.save(patient);
-        log.info("Successfully registered patient with ID: {}", savedPatient.getId());
+
+        // 4. Resource Allocation
+        resourceAllocator.allocateResource(savedPatient);
+        savedPatient = patientRepository.save(savedPatient);
+
+        // 5. Audit Logging
+        logEvent(savedPatient, "INTAKE", "New patient intake and AI triage completed", null, PatientStatus.TRIAGED, null, priority);
+
+        // 6. Broadcast Real-time
+        broadcastUpdate(savedPatient);
+
         return savedPatient;
     }
-    
-    public Patient getPatientById(String id) {
-        log.debug("Fetching patient by ID: {}", id);
-        return patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with ID: " + id));
+
+    public List<Patient> getActivePatients() {
+        return patientRepository.findByIsDeletedFalse();
     }
-    
-    public Patient getPatientByEmail(String email) {
-        log.debug("Fetching patient by email: {}", email);
-        return patientRepository.findByEmail(email)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with email: " + email));
+
+    public List<Patient> getRecycleBin() {
+        return patientRepository.findByIsDeletedTrue();
     }
-    
-    public List<Patient> getAllPatients() {
-        log.debug("Fetching all patients");
-        return patientRepository.findAll();
-    }
-    
-    public Patient updatePatient(String id, RegistrationRequest request) {
-        log.info("Updating patient ID: {}", id);
+
+    @Transactional
+    public void softDelete(@NotNull String id) {
         Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with ID: " + id));
-        
-        patient.setName(request.getName());
-        patient.setEmail(request.getEmail());
-        patient.setPhoneNumber(request.getPhoneNumber());
-        patient.setSymptoms(request.getSymptoms());
-        patient.setLastUpdated(LocalDateTime.now());
-        
-        Patient updatedPatient = patientRepository.save(patient);
-        log.info("Successfully updated patient ID: {}", id);
-        return updatedPatient;
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        patient.setIsDeleted(true);
+        patientRepository.save(patient);
+        logEvent(patient, "DISMISS", "Patient moved to recycle bin", null, null, null, null);
+        broadcastUpdate(patient);
     }
-    
-    public void deletePatient(String id) {
-        log.info("Deleting patient ID: {}", id);
-        if (!patientRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Patient not found with ID: " + id);
-        }
-        patientRepository.deleteById(id);
-        log.info("Successfully deleted patient ID: {}", id);
+
+    private void logEvent(Patient patient, String type, String desc, PatientStatus prevStatus, PatientStatus nextStatus, TriagePriority prevPri, TriagePriority nextPri) {
+        PatientEvent event = PatientEvent.builder()
+                .patientId(patient.getId())
+                .eventType(type)
+                .description(desc)
+                .prevStatus(prevStatus)
+                .nextStatus(nextStatus)
+                .prevPriority(prevPri)
+                .nextPriority(nextPri)
+                .build();
+        eventRepository.save(event);
+    }
+
+    private void broadcastUpdate(Patient patient) {
+        messagingTemplate.convertAndSend("/topic/patients", patient);
     }
 }

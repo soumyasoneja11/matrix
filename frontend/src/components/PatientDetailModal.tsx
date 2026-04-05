@@ -70,7 +70,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
   };
 
   const severity = getSeverityConfig();
-  const createdDate = new Date(patient.createdAt);
+  const createdDateStr = patient?.createdAt || patient?.updatedAt || new Date().toISOString();
+  const createdDate = new Date(createdDateStr);
 
   const triageRationale: Record<string, { text: string; confidence: number }> = {
     CRITICAL: { text: 'Patient presents with high-acuity symptoms requiring immediate intervention. Vital signs indicate hemodynamic instability.', confidence: 92 },
@@ -130,7 +131,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                     </span>
                   </div>
                   <p className={`text-sm mt-0.5 ${isLight ? 'text-gray-500' : 'text-white/50'}`}>
-                    Age {patient.age || 'N/A'} · {patient.location || 'Unassigned'}
+                    Age {patient?.age || 'N/A'} · {patient?.location || 'Unassigned'}
                   </p>
                 </div>
               </div>
@@ -234,11 +235,11 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                       isLight={isLight}
                       dotColor={severity.dot}
                     />
-                    {patient.assignedStaff && (
+                    {(patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId) && (
                       <TimelineItem
                         label="Assignment"
-                        desc={`Assigned to ${patient.assignedStaff}`}
-                        time={new Date(patient.updatedAt).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+                        desc={`Assigned to ${patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId}`}
+                        time={new Date(patient?.updatedAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
                         actor="System"
                         isLight={isLight}
                         dotColor="bg-purple-500"

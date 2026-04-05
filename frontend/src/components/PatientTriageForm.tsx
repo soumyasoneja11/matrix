@@ -10,6 +10,9 @@ interface PatientTriageFormProps {
 }
 
 const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded }) => {
+  const [name, setName] = useState('');
+  const [email, setEmail] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState('en-US');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -23,14 +26,25 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
   };
 
   const handleSubmit = async () => {
-    if (!description.trim()) return;
+    if (!description.trim() || !name.trim()) {
+      setError('Name and Symptoms are required for triage.');
+      return;
+    }
     
     setIsSubmitting(true);
     setError(null);
     setSuccess(false);
     try {
-      await createPatient({ description });
+      await createPatient({ 
+        name, 
+        email, 
+        phoneNumber, 
+        symptoms: description 
+      });
       setDescription('');
+      setName('');
+      setEmail('');
+      setPhoneNumber('');
       setSuccess(true);
       onPatientAdded();
       setTimeout(() => setSuccess(false), 3000);
@@ -77,8 +91,48 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         <div className={`rounded-xl p-3 ${isLight ? 'bg-[#e8f5f5] border border-[#247B7B]/20' : 'bg-primary-500/10 border border-primary-500/20'}`}>
           <p className={`text-xs flex items-center gap-2 ${isLight ? 'text-[#247B7B]' : 'text-primary-300'}`}>
             <FaMagic className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
-            AI Tip: Include age, symptoms, pain level, and duration for accurate triage
+            AI Tip: Voice capture automatically extracts symptoms, vitals, and chief complaints.
           </p>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block theme-text">Full Name</label>
+            <input
+              type="text"
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              placeholder="John Doe"
+              className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
+              }`}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block theme-text">Phone Number</label>
+            <input
+              type="text"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(e.target.value)}
+              placeholder="+1 (555) 000-0000"
+              className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
+              }`}
+            />
+          </div>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium mb-1 block theme-text">Email (Optional)</label>
+          <input
+            type="email"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
+            placeholder="patient@example.com"
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+              isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
+            }`}
+          />
         </div>
         
         <div>
