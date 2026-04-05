@@ -3,6 +3,7 @@ import VoiceCaptureButton from './VoiceCaptureButton';
 import { createPatient } from '../services/api';
 import { motion } from 'framer-motion';
 import { FaLanguage, FaMagic, FaClock, FaChartLine, FaMicrophone } from 'react-icons/fa';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface PatientTriageFormProps {
   onPatientAdded: () => void;
@@ -14,6 +15,8 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const handleVoiceTranscript = (transcript: string) => {
     setDescription(prev => prev + (prev ? ' ' : '') + transcript);
@@ -45,19 +48,23 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
       animate={{ opacity: 1, y: 0 }}
       className="glass-card p-6"
     >
-      <h2 className="text-2xl font-bold mb-2 gradient-text">Patient Triage</h2>
-      <p className="text-white/60 text-sm mb-6">Voice-powered intake & AI-driven urgency classification</p>
+      <h2 className={`text-2xl font-bold mb-2 ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Patient Triage</h2>
+      <p className="theme-text-muted text-sm mb-6">Voice-powered intake & AI-driven urgency classification</p>
       
       <div className="space-y-4">
         <div>
-          <label className="flex items-center gap-2 text-sm font-medium mb-2">
+          <label className="flex items-center gap-2 text-sm font-medium mb-2 theme-text">
             <FaLanguage />
             Voice Language
           </label>
           <select
             value={language}
             onChange={(e) => setLanguage(e.target.value)}
-            className="w-full px-4 py-2 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary-500"
+            className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+              isLight
+                ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]'
+                : 'bg-white/5 border-white/10 text-white'
+            }`}
           >
             <option value="en-US">English (US)</option>
             <option value="en-GB">English (UK)</option>
@@ -67,21 +74,25 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
           </select>
         </div>
         
-        <div className="bg-primary-500/10 border border-primary-500/20 rounded-xl p-3">
-          <p className="text-xs text-primary-300 flex items-center gap-2">
-            <FaMagic className="text-primary-400" />
+        <div className={`rounded-xl p-3 ${isLight ? 'bg-[#e8f5f5] border border-[#247B7B]/20' : 'bg-primary-500/10 border border-primary-500/20'}`}>
+          <p className={`text-xs flex items-center gap-2 ${isLight ? 'text-[#247B7B]' : 'text-primary-300'}`}>
+            <FaMagic className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
             AI Tip: Include age, symptoms, pain level, and duration for accurate triage
           </p>
         </div>
         
         <div>
-          <label className="text-sm font-medium mb-2 block">Patient Information</label>
+          <label className="text-sm font-medium mb-2 block theme-text">Patient Information</label>
           <textarea
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Describe patient condition: age, symptoms, vitals, history..."
             rows={4}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-primary-500 transition-all resize-none"
+            className={`w-full px-4 py-3 border rounded-xl focus:outline-none focus:border-primary-500 transition-all resize-none ${
+              isLight
+                ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e] placeholder-[#b0bfbf]'
+                : 'bg-white/5 border-white/10 text-white placeholder-white/30'
+            }`}
           />
         </div>
         
@@ -108,27 +119,33 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         </button>
       </div>
       
-      <div className="grid grid-cols-3 gap-3 mt-6 pt-6 border-t border-white/10">
+      <div className={`grid grid-cols-3 gap-3 mt-6 pt-6 border-t ${isLight ? 'border-[#e8e2d9]' : 'border-white/10'}`}>
         <div className="text-center">
-          <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br from-blue-500/20 to-cyan-500/20 flex items-center justify-center">
-            <FaMicrophone className="text-blue-400" />
+          <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
+            isLight ? 'bg-blue-50' : 'bg-gradient-to-br from-blue-500/20 to-cyan-500/20'
+          }`}>
+            <FaMicrophone className={isLight ? 'text-blue-500' : 'text-blue-400'} />
           </div>
-          <p className="text-xs font-medium">Voice Capture</p>
-          <p className="text-[10px] text-white/40">Hands-free, multilingual</p>
+          <p className="text-xs font-medium theme-text">Voice Capture</p>
+          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Hands-free, multilingual</p>
         </div>
         <div className="text-center">
-          <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br from-purple-500/20 to-pink-500/20 flex items-center justify-center">
-            <FaMagic className="text-purple-400" />
+          <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
+            isLight ? 'bg-purple-50' : 'bg-gradient-to-br from-purple-500/20 to-pink-500/20'
+          }`}>
+            <FaMagic className={isLight ? 'text-purple-500' : 'text-purple-400'} />
           </div>
-          <p className="text-xs font-medium">AI Extraction</p>
-          <p className="text-[10px] text-white/40">Symptoms, vitals parsing</p>
+          <p className="text-xs font-medium theme-text">AI Extraction</p>
+          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Symptoms, vitals parsing</p>
         </div>
         <div className="text-center">
-          <div className="w-10 h-10 mx-auto mb-2 rounded-lg bg-gradient-to-br from-red-500/20 to-orange-500/20 flex items-center justify-center">
-            <FaChartLine className="text-red-400" />
+          <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
+            isLight ? 'bg-red-50' : 'bg-gradient-to-br from-red-500/20 to-orange-500/20'
+          }`}>
+            <FaChartLine className={isLight ? 'text-red-500' : 'text-red-400'} />
           </div>
-          <p className="text-xs font-medium">Urgency Scoring</p>
-          <p className="text-[10px] text-white/40">Critical/Urgent/Standard</p>
+          <p className="text-xs font-medium theme-text">Urgency Scoring</p>
+          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Critical/Urgent/Standard</p>
         </div>
       </div>
     </motion.div>

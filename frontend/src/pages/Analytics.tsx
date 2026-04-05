@@ -13,18 +13,21 @@ import AnalyticsCard from '../components/AnalyticsCard';
 import ActivityTable from '../components/ActivityTable';
 import { useAnalyticsData } from '../hooks/useAnalyticsData';
 import { useCsvExport } from '../hooks/useCsvExport';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 const Analytics = () => {
   const { data, loading, refresh } = useAnalyticsData();
   const { exportCsv } = useCsvExport();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   return (
     <div className="space-y-6">
       {/* Header with Actions */}
       <div className="flex items-start justify-between gap-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-          <h1 className="text-3xl font-bold gradient-text">Analytics Dashboard</h1>
-          <p className="text-white/60 mt-2">Real-time metrics, insights & activity logs</p>
+          <h1 className={`text-3xl font-bold ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Analytics Dashboard</h1>
+          <p className="theme-text-muted mt-2">Real-time metrics, insights & activity logs</p>
         </motion.div>
 
         <motion.div
@@ -37,7 +40,7 @@ const Analytics = () => {
             className="btn-secondary flex items-center gap-2 text-sm"
             id="export-csv-btn"
           >
-            <FaFileExport className="text-primary-400" />
+            <FaFileExport className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
             Export CSV
           </button>
           <button
@@ -110,8 +113,8 @@ const Analytics = () => {
           transition={{ delay: 0.3 }}
           className="glass-card p-6"
         >
-          <h2 className="text-lg font-bold mb-1">Priority Distribution</h2>
-          <p className="text-white/40 text-sm mb-5">Triage severity breakdown</p>
+          <h2 className="text-lg font-bold mb-1 theme-text">Priority Distribution</h2>
+          <p className="theme-text-subtle text-sm mb-5">Triage severity breakdown</p>
 
           <div className="space-y-5">
             {data.priorityDistribution.map((item) => (
@@ -122,16 +125,16 @@ const Analytics = () => {
                       className="w-3 h-3 rounded-full"
                       style={{ backgroundColor: item.color }}
                     />
-                    <span className="text-sm font-semibold text-white/90">{item.label}</span>
+                    <span className={`text-sm font-semibold ${isLight ? 'text-[#1a2e2e]' : 'text-white/90'}`}>{item.label}</span>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm font-bold text-white">{item.count}</span>
-                    <span className="text-xs text-white/50 w-10 text-right">
+                    <span className="text-sm font-bold theme-text">{item.count}</span>
+                    <span className={`text-xs w-10 text-right ${isLight ? 'text-[#94a3a3]' : 'text-white/50'}`}>
                       {item.percentage}%
                     </span>
                   </div>
                 </div>
-                <div className="w-full h-3 bg-white/10 rounded-full overflow-hidden">
+                <div className={`w-full h-3 rounded-full overflow-hidden ${isLight ? 'bg-[#f0ece4]' : 'bg-white/10'}`}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: `${item.percentage}%` }}
@@ -152,8 +155,8 @@ const Analytics = () => {
           transition={{ delay: 0.35 }}
           className="glass-card p-6"
         >
-          <h2 className="text-lg font-bold mb-1">Event Types</h2>
-          <p className="text-white/40 text-sm mb-5">Activity breakdown by category</p>
+          <h2 className="text-lg font-bold mb-1 theme-text">Event Types</h2>
+          <p className="theme-text-subtle text-sm mb-5">Activity breakdown by category</p>
 
           <div className="space-y-1">
             {data.eventTypes.map((evt, idx) => (
@@ -162,21 +165,23 @@ const Analytics = () => {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.4 + idx * 0.05 }}
-                className="flex items-center justify-between px-4 py-3.5 rounded-xl hover:bg-white/5 transition-colors duration-200"
+                className={`flex items-center justify-between px-4 py-3.5 rounded-xl transition-colors duration-200 ${
+                  isLight ? 'hover:bg-[#f8f6f1]' : 'hover:bg-white/5'
+                }`}
               >
                 <div className="flex items-center gap-3">
                   <span className="text-lg">{evt.icon}</span>
-                  <span className="text-sm font-medium text-white/80">{evt.label}</span>
+                  <span className={`text-sm font-medium ${isLight ? 'text-[#3d5555]' : 'text-white/80'}`}>{evt.label}</span>
                 </div>
-                <span className="text-lg font-bold text-white tabular-nums">{evt.count}</span>
+                <span className="text-lg font-bold theme-text tabular-nums">{evt.count}</span>
               </motion.div>
             ))}
           </div>
 
           {/* Divider + total */}
-          <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between px-4">
-            <span className="text-sm font-semibold text-white/60">Total</span>
-            <span className="text-lg font-bold gradient-text tabular-nums">
+          <div className={`mt-4 pt-4 border-t flex items-center justify-between px-4 ${isLight ? 'border-[#e8e2d9]' : 'border-white/10'}`}>
+            <span className="text-sm font-semibold theme-text-muted">Total</span>
+            <span className={`text-lg font-bold tabular-nums ${isLight ? 'text-[#247B7B]' : 'gradient-text'}`}>
               {data.eventTypes.reduce((sum, e) => sum + e.count, 0)}
             </span>
           </div>
