@@ -39,7 +39,7 @@ const ResourceAllocation = () => {
       GREEN: 'STANDARD',
     };
     const newZone = {
-      id: zones.length + 1,
+      id: String(zones.length + 1),
       name: data.name,
       severityBand: triageMap[data.severityBand] || 'STANDARD',
       description: data.description,

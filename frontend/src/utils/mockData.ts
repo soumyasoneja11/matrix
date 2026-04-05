@@ -1,6 +1,4 @@
-import type { Patient } from '../types/patient';
-import type { Staff, StaffAssignment } from '../types/staff';
-import type { Zone, Room } from '../types/patient';
+import { Patient, Zone, Room, Staff, StaffAssignment } from '../types';
 
 export const DEMO_PATIENTS: Patient[] = [
   { id: '1', name: 'Rahul Sharma', age: 45, gender: 'M', chiefComplaint: 'Severe chest pain radiating to left arm, shortness of breath, diaphoresis', triageLevel: 'CRITICAL', status: 'ACTIVE', zoneName: 'Resuscitation Bay', roomCode: 'TR-1', assignedNurse: 'Pooja Sinha', assignedDoctor: 'Dr. Advik Mehta', createdAt: new Date().toISOString() },

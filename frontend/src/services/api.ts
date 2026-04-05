@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { Patient, TriageRequest } from '../types';
+import { Patient, TriageRequest, Staff } from '../types';
 
 // Standardized API Response interface matching backend
 export interface ApiResponse<T> {
@@ -58,6 +58,15 @@ export const fetchPatients = async (): Promise<Patient[]> => {
   return response.data;
 };
 
+export const staffAPI = {
+  getAll: () => api.get<Staff[]>('/staff'),
+  getById: (id: string) => api.get<Staff>(`/staff/${id}`),
+  create: (data: Partial<Staff>) => api.post<Staff>('/staff', data),
+  update: (id: string, data: Partial<Staff>) => api.put<Staff>(`/staff/${id}`, data),
+  remove: (id: string) => api.delete(`/staff/${id}`),
+  getAssignments: () => api.get('/staff/assignments'),
+};
+
 export const createPatient = async (data: { description: string }): Promise<Patient> => {
   const response = await api.post<Patient>('/patients', data);
   return response.data;
@@ -70,6 +79,10 @@ export const updatePatient = async (id: string, data: Partial<Patient>): Promise
 
 export const deletePatient = async (id: string): Promise<void> => {
   await api.delete(`/patients/${id}`);
+};
+
+export const worklistAPI = {
+  getMyWorklist: () => api.get<Patient[]>('/patients/my-worklist'),
 };
 
 export const authAPI = {

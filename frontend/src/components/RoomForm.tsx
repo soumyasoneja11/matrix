@@ -8,7 +8,7 @@ interface RoomFormData {
 }
 
 interface ZoneOption {
-  id: number;
+  id: string;
   name: string;
 }
 

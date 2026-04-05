@@ -50,7 +50,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
         </div>
         <div className="flex items-center gap-1">
           <FaClock className="text-primary-400" />
-          <span>{formatDistanceToNow(new Date(patient.createdAt), { addSuffix: true })}</span>
+          <span>{formatDistanceToNow(new Date(patient.createdAt || Date.now()), { addSuffix: true })}</span>
         </div>
       </div>
       

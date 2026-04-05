@@ -12,7 +12,7 @@ import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
 import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
 import { patientAPI } from '../services/api';
-import type { Patient } from '../types/patient';
+import { Patient } from '../types';
 import mikePng from '../assets/images/mike.png';
 
 const languageOptions = [
