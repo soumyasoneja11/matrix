@@ -34,15 +34,13 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
 
   const severity = getSeverityConfig();
 
-  const actionBtnClass = `p-1.5 rounded-lg transition-colors ${
-    isLight
+  const actionBtnClass = `p-1.5 rounded-lg transition-colors ${isLight
       ? 'text-gray-400 hover:text-gray-600 hover:bg-gray-100'
       : 'text-white/30 hover:text-white/60 hover:bg-white/10'
-  }`;
+    }`;
 
-  const labelClass = `text-[10px] font-semibold uppercase tracking-wider ${
-    isLight ? 'text-gray-400' : 'text-white/35'
-  }`;
+  const labelClass = `text-[10px] font-semibold uppercase tracking-wider ${isLight ? 'text-gray-400' : 'text-white/35'
+    }`;
 
   const valueClass = `text-sm ${isLight ? 'text-gray-800' : 'text-white/85'}`;
 
@@ -82,18 +80,16 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
 
           {/* Row 2: Patient ID pill + Generate QR button */}
           <div className="flex items-center justify-between">
-            <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-mono ${
-              isLight ? 'bg-gray-100 text-gray-500' : 'bg-white/8 text-white/40'
-            }`}>
+            <span className={`inline-flex px-2 py-0.5 rounded-md text-[10px] font-mono ${isLight ? 'bg-gray-100 text-gray-500' : 'bg-white/8 text-white/40'
+              }`}>
               #{patient.id}
             </span>
             <button
               onClick={(e) => { e.stopPropagation(); setIsQROpen(true); }}
-              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
-                isLight
+              className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${isLight
                   ? 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200'
                   : 'bg-white/5 text-white/50 hover:bg-white/10 border border-white/10'
-              }`}
+                }`}
             >
               <QrCode size={11} />
               Generate QR
@@ -166,7 +162,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
             <div className="flex items-center gap-1.5 mt-0.5">
               <FaClock size={10} className={isLight ? 'text-gray-400' : 'text-white/35'} />
               <span className={`text-sm ${isLight ? 'text-gray-500' : 'text-white/55'}`}>
-                {formatDistanceToNow(new Date(patient?.createdAt || Date.now()), { addSuffix: true })}
+                {formatDistanceToNow(new Date(patient.createdAt ?? Date.now()), { addSuffix: true })}
               </span>
             </div>
           </div>
@@ -177,11 +173,10 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
         <div className="px-4 pb-4 mt-auto" onClick={(e) => e.stopPropagation()}>
           <div className={sectionDivider} />
           <button
-            className={`w-full mt-3 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-              isLight
+            className={`w-full mt-3 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${isLight
                 ? 'bg-[#e8f5f5] text-[#247B7B] hover:bg-[#d5edec]'
                 : 'bg-primary-600/20 text-primary-300 hover:bg-primary-600/30'
-            }`}
+              }`}
           >
             <FaRedo size={10} />
             Re-triage
@@ -198,7 +193,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
       <QRModal
         isOpen={isQROpen}
         onClose={() => setIsQROpen(false)}
-        patientId={patient.id}
+        patientId={String(patient.id)}
         patientName={patient.name || 'Unnamed Patient'}
         patientLocation={patient.location}
       />
