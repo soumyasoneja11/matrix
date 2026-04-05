@@ -6,6 +6,7 @@ import { Download, RefreshCw, QrCode } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientDetailModal from './PatientDetailModal';
+import QRModal from './QRCode/QRDisplay';
 
 interface PatientCardProps {
   patient: Patient;
@@ -16,6 +17,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isQROpen, setIsQROpen] = useState(false);
 
   const getSeverityConfig = () => {
     switch (patient.triageLevel) {
@@ -54,7 +56,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
         whileHover={{ y: -2 }}
         onClick={() => setIsModalOpen(true)}
         className={`
-          rounded-xl border-l-[3px] cursor-pointer
+          rounded-xl border-l-[3px] cursor-pointer flex flex-col
           transition-all duration-200
           ${severity.borderColor}
           ${isLight
@@ -63,7 +65,8 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
           }
         `}
       >
-        <div className="p-4 space-y-3">
+        {/* Main content area */}
+        <div className="p-4 space-y-3 flex-1">
 
           {/* ── 1. HEADER ── */}
           {/* Row 1: Full Name + Action Icons */}
@@ -85,7 +88,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
               #{patient.id}
             </span>
             <button
-              onClick={(e) => { e.stopPropagation(); }}
+              onClick={(e) => { e.stopPropagation(); setIsQROpen(true); }}
               className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
                 isLight
                   ? 'bg-gray-50 text-gray-500 hover:bg-gray-100 border border-gray-200'
@@ -97,21 +100,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
             </button>
           </div>
 
-          {/* ── 2. ACTION ROW ── */}
-          <div className={sectionDivider} />
-          <button
-            onClick={(e) => { e.stopPropagation(); }}
-            className={`w-full py-2 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
-              isLight
-                ? 'bg-[#e8f5f5] text-[#247B7B] hover:bg-[#d5edec]'
-                : 'bg-primary-600/20 text-primary-300 hover:bg-primary-600/30'
-            }`}
-          >
-            <FaRedo size={10} />
-            Re-triage
-          </button>
-
-          {/* ── 3. PRIMARY MEDICAL INFORMATION ── */}
+          {/* ── 2. PRIMARY MEDICAL INFORMATION ── */}
           <div className={sectionDivider} />
 
           {/* Chief Complaint */}
@@ -183,12 +172,35 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
           </div>
 
         </div>
+
+        {/* ── RE-TRIAGE CTA (bottom, full-width) ── */}
+        <div className="px-4 pb-4 mt-auto" onClick={(e) => e.stopPropagation()}>
+          <div className={sectionDivider} />
+          <button
+            className={`w-full mt-3 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${
+              isLight
+                ? 'bg-[#e8f5f5] text-[#247B7B] hover:bg-[#d5edec]'
+                : 'bg-primary-600/20 text-primary-300 hover:bg-primary-600/30'
+            }`}
+          >
+            <FaRedo size={10} />
+            Re-triage
+          </button>
+        </div>
       </motion.div>
 
       <PatientDetailModal
         patient={patient}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+
+      <QRModal
+        isOpen={isQROpen}
+        onClose={() => setIsQROpen(false)}
+        patientId={patient.id}
+        patientName={patient.name || 'Unnamed Patient'}
+        patientLocation={patient.location}
       />
     </>
   );
