@@ -5,6 +5,19 @@ export const TriageLevel = {
 } as const;
 
 export type TriageLevel = typeof TriageLevel[keyof typeof TriageLevel];
+
+export const PatientStatus = {
+  ACTIVE: 'ACTIVE',
+  INTAKE: 'INTAKE',
+  TRIAGED: 'TRIAGED',
+  IN_TREATMENT: 'IN_TREATMENT',
+  OBSERVATION: 'OBSERVATION',
+  DISCHARGED: 'DISCHARGED',
+  DECEASED: 'DECEASED',
+} as const;
+
+export type PatientStatus = typeof PatientStatus[keyof typeof PatientStatus];
+
 export type Role = 'ADMIN' | 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST';
 
 export type Department =
@@ -43,6 +56,8 @@ export interface Patient {
   roomCode?: string;
   assignedNurse?: string;
   assignedDoctor?: string;
+  assignedNurseId?: string;
+  assignedDoctorId?: string;
   symptoms?: string[];
   vitals?: Vitals;
   assignedStaff?: string;
@@ -96,7 +111,11 @@ export interface Task {
 }
 
 export interface TriageRequest {
-  patientDetails: string;
+  name?: string;
+  email?: string;
+  phoneNumber?: string;
+  symptoms?: string;
+  patientDetails?: string;
   language?: string;
 }
 

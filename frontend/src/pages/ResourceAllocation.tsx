@@ -110,11 +110,10 @@ const ResourceAllocation = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className={`glass-card p-4 flex items-center justify-between ${
-            isLight
+          className={`glass-card p-4 flex items-center justify-between ${isLight
               ? 'border-red-200 bg-red-50'
               : 'border-red-500/30 bg-red-500/10'
-          }`}
+            }`}
         >
           <div className="flex items-center gap-3">
             <FaExclamationTriangle className={`text-lg flex-shrink-0 ${isLight ? 'text-red-500' : 'text-red-400'}`} />
@@ -172,16 +171,14 @@ const ResourceAllocation = () => {
               >
                 <div className="flex items-start justify-between mb-3">
                   <div
-                    className={`w-10 h-10 rounded-xl bg-gradient-to-r ${
-                      severityColors[zone.severityBand] || 'from-gray-500 to-gray-600'
-                    } flex items-center justify-center shadow-lg`}
+                    className={`w-10 h-10 rounded-xl bg-gradient-to-r ${severityColors[zone.severityBand] || 'from-gray-500 to-gray-600'
+                      } flex items-center justify-center shadow-lg`}
                   >
                     <FaMapMarkerAlt className="text-white text-sm" />
                   </div>
                   <span
-                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      severityBadgeClass[zone.severityBand] || ''
-                    }`}
+                    className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${severityBadgeClass[zone.severityBand] || ''
+                      }`}
                   >
                     {zone.severityBand}
                   </span>
@@ -190,9 +187,8 @@ const ResourceAllocation = () => {
                 <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isLight ? 'text-[#6b7e7e]' : 'text-white/50'}`}>
                   {zone.description}
                 </p>
-                <div className={`mt-3 pt-3 border-t flex items-center justify-between text-xs ${
-                  isLight ? 'border-[#e8e2d9] text-[#94a3a3]' : 'border-white/10 text-white/40'
-                }`}>
+                <div className={`mt-3 pt-3 border-t flex items-center justify-between text-xs ${isLight ? 'border-[#e8e2d9] text-[#94a3a3]' : 'border-white/10 text-white/40'
+                  }`}>
                   <span>
                     {rooms.filter((r) => r.zoneId === zone.id).length} rooms
                   </span>

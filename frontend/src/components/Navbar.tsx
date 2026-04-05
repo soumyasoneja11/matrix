@@ -27,11 +27,11 @@ const Navbar = () => {
       <nav
         id="collapsed-navbar"
         className={`
-          flex items-center gap-1 px-2 py-1.5 rounded-2xl
+          flex items-center gap-2 px-2 py-1.5 rounded-full
           backdrop-blur-sm
           ${isLight
-            ? 'bg-white/70 border border-[#e8e2d9] shadow-md'
-            : 'bg-white/5 border border-white/10 shadow-lg shadow-black/10'
+            ? 'bg-gradient-to-r from-white/80 to-[#247B7B]/8 border border-[#e8e2d9] shadow-md'
+            : 'bg-gradient-to-r from-white/[0.06] to-white/[0.03] border border-white/10 shadow-lg shadow-black/10'
           }
         `}
         style={{ maxWidth: '100%', overflowX: 'auto' }}
@@ -45,13 +45,13 @@ const Navbar = () => {
             {({ isActive }) => (
               <span
                 className={`
-                  flex items-center gap-2 px-3 py-2 rounded-lg text-[0.8125rem] font-medium
+                  flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[0.8125rem] font-medium
                   whitespace-nowrap cursor-pointer transition-all duration-200
                   ${isActive
-                    ? 'bg-[#247B7B] text-white shadow-sm'
+                    ? 'bg-[#247B7B] text-white shadow-sm shadow-[#247B7B]/25'
                     : isLight
-                      ? 'text-[#6b7e7e] hover:bg-[#247B7B]/8 hover:text-[#247B7B]'
-                      : 'text-white/60 hover:bg-white/8 hover:text-white'
+                      ? 'text-[#6b7e7e] hover:bg-[#247B7B]/8 hover:text-[#247B7B] hover:scale-105'
+                      : 'text-white/60 hover:bg-white/8 hover:text-white hover:scale-105'
                   }
                 `}
                 style={isActive ? { fontWeight: 600 } : undefined}
