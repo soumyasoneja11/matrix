@@ -1,16 +1,35 @@
 import { useState } from 'react';
 import { FaBell, FaUserCircle, FaSearch, FaCloudSun } from 'react-icons/fa';
-import { Sun, Moon } from 'lucide-react';
+import { Sun, Moon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
+import { useSidebar } from '../hooks/contexts/SidebarContext';
 
 const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { theme, toggleTheme } = useTheme();
+  const { isCollapsed, toggleSidebar } = useSidebar();
 
   return (
     <header className="glass-card m-4 mb-0 px-6 py-4 flex justify-between items-center">
-      <div className="flex items-center gap-4 flex-1 max-w-md">
+      <div className="flex items-center gap-3 flex-1 max-w-md">
+        {/* Sidebar Toggle */}
+        <motion.button
+          onClick={toggleSidebar}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.9 }}
+          className="p-2 rounded-xl theme-bg-hover transition-all cursor-pointer"
+          title={isCollapsed ? 'Show Sidebar' : 'Hide Sidebar'}
+          id="sidebar-toggle-btn"
+        >
+          {isCollapsed ? (
+            <PanelLeftOpen className="w-5 h-5 theme-text-muted" />
+          ) : (
+            <PanelLeftClose className="w-5 h-5 theme-text-muted" />
+          )}
+        </motion.button>
+
+        {/* Search */}
         <div className="relative flex-1">
           <FaSearch className="absolute left-3 top-1/2 -translate-y-1/2 theme-text-subtle text-sm" />
           <input
