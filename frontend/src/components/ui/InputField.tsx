@@ -181,7 +181,6 @@ export function InputField({
         <input
           name={name}
           type={type}
-          name={name}
           value={value}
           onChange={onChange}
           placeholder={placeholder}

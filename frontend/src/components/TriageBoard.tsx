@@ -2,6 +2,7 @@ import { Patient, TriageLevel } from '../types';
 import PatientCard from './PatientCard';
 import { motion } from 'framer-motion';
 import { FaSkullCrossbones, FaExclamationTriangle, FaShieldAlt } from 'react-icons/fa';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface TriageBoardProps {
   patients: Patient[];
@@ -9,6 +10,9 @@ interface TriageBoardProps {
 }
 
 const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) => {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   const criticalPatients = patients.filter(p => p.triageLevel === TriageLevel.CRITICAL);
   const urgentPatients = patients.filter(p => p.triageLevel === TriageLevel.URGENT);
   const standardPatients = patients.filter(p => p.triageLevel === TriageLevel.STANDARD);
@@ -19,7 +23,10 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
       icon: FaSkullCrossbones,
       color: 'critical',
       bgGradient: 'from-red-600/20 to-red-900/20',
+      lightBg: 'bg-red-50',
       borderColor: 'border-red-500/30',
+      lightBorder: 'border-red-200',
+      iconColor: isLight ? 'text-red-500' : 'text-red-400',
       patients: criticalPatients,
     },
     {
@@ -27,7 +34,10 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
       icon: FaExclamationTriangle,
       color: 'urgent',
       bgGradient: 'from-amber-600/20 to-amber-900/20',
+      lightBg: 'bg-amber-50',
       borderColor: 'border-amber-500/30',
+      lightBorder: 'border-amber-200',
+      iconColor: isLight ? 'text-amber-500' : 'text-amber-400',
       patients: urgentPatients,
     },
     {
@@ -35,7 +45,10 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
       icon: FaShieldAlt,
       color: 'standard',
       bgGradient: 'from-emerald-600/20 to-emerald-900/20',
+      lightBg: 'bg-emerald-50',
       borderColor: 'border-emerald-500/30',
+      lightBorder: 'border-emerald-200',
+      iconColor: isLight ? 'text-emerald-500' : 'text-emerald-400',
       patients: standardPatients,
     },
   ];
@@ -43,8 +56,8 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold gradient-text">Live Triage Dashboard</h2>
-        <div className="flex items-center gap-2 text-xs text-white/40">
+        <h2 className={`text-2xl font-bold ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Live Triage Dashboard</h2>
+        <div className={`flex items-center gap-2 text-xs ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
           Auto-refreshes every 4s
         </div>
@@ -57,19 +70,23 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: idx * 0.1 }}
-            className={`glass-card overflow-hidden border-t-4 border-${column.color}-500`}
+            className={`glass-card overflow-hidden ${isLight ? `border-t-4 ${column.lightBorder}` : `border-t-4 border-${column.color}-500`}`}
           >
-            <div className={`p-4 bg-gradient-to-r ${column.bgGradient} border-b ${column.borderColor}`}>
+            <div className={`p-4 border-b ${
+              isLight
+                ? `${column.lightBg} ${column.lightBorder}`
+                : `bg-gradient-to-r ${column.bgGradient} ${column.borderColor}`
+            }`}>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <column.icon className={`text-${column.color}-400 text-xl`} />
-                  <h3 className="font-bold text-lg">{column.title}</h3>
+                  <column.icon className={`text-xl ${column.iconColor}`} />
+                  <h3 className="font-bold text-lg theme-text">{column.title}</h3>
                 </div>
                 <span className={`status-badge status-${column.color}`}>
                   {column.patients.length} patients
                 </span>
               </div>
-              <p className="text-xs text-white/40 mt-1">
+              <p className={`text-xs mt-1 ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>
                 {column.title === 'CRITICAL' && 'Immediate action required'}
                 {column.title === 'URGENT' && 'Monitor closely'}
                 {column.title === 'STANDARD' && 'Safe to wait'}
@@ -78,7 +95,7 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
             
             <div className="p-3 max-h-[600px] overflow-y-auto space-y-3">
               {column.patients.length === 0 ? (
-                <div className="text-center py-8 text-white/30 text-sm">
+                <div className={`text-center py-8 text-sm ${isLight ? 'text-[#b0bfbf]' : 'text-white/30'}`}>
                   No patients in this category
                 </div>
               ) : (

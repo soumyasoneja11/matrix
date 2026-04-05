@@ -15,11 +15,14 @@ import AnalyticsCard from '../components/AnalyticsCard';
 import ZoneForm from '../components/ZoneForm';
 import RoomForm from '../components/RoomForm';
 import { DEMO_ZONES, DEMO_ROOMS } from '../utils/mockData';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 const ResourceAllocation = () => {
   const [zones, setZones] = useState(DEMO_ZONES);
   const [rooms] = useState(DEMO_ROOMS);
   const [showError, setShowError] = useState(true);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const activeZones = zones.length;
   const trackedRooms = rooms.length;
@@ -39,7 +42,7 @@ const ResourceAllocation = () => {
       GREEN: 'STANDARD',
     };
     const newZone = {
-      id: zones.length + 1,
+      id: String(zones.length + 1),
       name: data.name,
       severityBand: triageMap[data.severityBand] || 'STANDARD',
       description: data.description,
@@ -48,7 +51,6 @@ const ResourceAllocation = () => {
   };
 
   const handleAddRoom = (data: { zoneId: string; roomCode: string; capacity: number }) => {
-    // In a real app, this would call the backend
     console.log('Room added:', data);
   };
 
@@ -59,17 +61,23 @@ const ResourceAllocation = () => {
   };
 
   const severityBadgeClass: Record<string, string> = {
-    CRITICAL: 'bg-gradient-to-r from-red-600 to-red-700 text-white ring-2 ring-red-400/50',
-    URGENT: 'bg-gradient-to-r from-amber-600 to-amber-700 text-white ring-2 ring-amber-400/50',
-    STANDARD: 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white ring-2 ring-emerald-400/50',
+    CRITICAL: isLight
+      ? 'bg-red-50 text-red-700 border border-red-200'
+      : 'bg-gradient-to-r from-red-600 to-red-700 text-white ring-2 ring-red-400/50',
+    URGENT: isLight
+      ? 'bg-amber-50 text-amber-700 border border-amber-200'
+      : 'bg-gradient-to-r from-amber-600 to-amber-700 text-white ring-2 ring-amber-400/50',
+    STANDARD: isLight
+      ? 'bg-emerald-50 text-emerald-700 border border-emerald-200'
+      : 'bg-gradient-to-r from-emerald-600 to-emerald-700 text-white ring-2 ring-emerald-400/50',
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-3xl font-bold gradient-text">Resource Allocation</h1>
-        <p className="text-white/60 mt-2">Real-time resource tracking, zone & room management</p>
+        <h1 className={`text-3xl font-bold ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Resource Allocation</h1>
+        <p className="theme-text-muted mt-2">Real-time resource tracking, zone & room management</p>
       </motion.div>
 
       {/* A. Top Metrics */}
@@ -102,13 +110,17 @@ const ResourceAllocation = () => {
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="glass-card p-4 border-red-500/30 bg-red-500/10 flex items-center justify-between"
+          className={`glass-card p-4 flex items-center justify-between ${
+            isLight
+              ? 'border-red-200 bg-red-50'
+              : 'border-red-500/30 bg-red-500/10'
+          }`}
         >
           <div className="flex items-center gap-3">
-            <FaExclamationTriangle className="text-red-400 text-lg flex-shrink-0" />
+            <FaExclamationTriangle className={`text-lg flex-shrink-0 ${isLight ? 'text-red-500' : 'text-red-400'}`} />
             <div>
-              <p className="text-sm font-semibold text-red-300">Server error: 403</p>
-              <p className="text-xs text-white/50 mt-0.5">
+              <p className={`text-sm font-semibold ${isLight ? 'text-red-700' : 'text-red-300'}`}>Server error: 403</p>
+              <p className={`text-xs mt-0.5 ${isLight ? 'text-red-500/70' : 'text-white/50'}`}>
                 Capacity data could not be fetched. Some metrics may be stale.
               </p>
             </div>
@@ -140,11 +152,11 @@ const ResourceAllocation = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.35 }}
       >
-        <h2 className="text-lg font-bold mb-4">Care Zones</h2>
+        <h2 className="text-lg font-bold mb-4 theme-text">Care Zones</h2>
         {zones.length === 0 ? (
           <div className="glass-card p-10 text-center">
-            <p className="text-white/50 text-lg">🏥</p>
-            <p className="text-white/60 mt-2">
+            <p className="theme-text-muted text-lg">🏥</p>
+            <p className="theme-text-muted mt-2">
               No zones configured yet. Create the first one from the left panel.
             </p>
           </div>
@@ -174,11 +186,13 @@ const ResourceAllocation = () => {
                     {zone.severityBand}
                   </span>
                 </div>
-                <h3 className="font-bold text-base">{zone.name}</h3>
-                <p className="text-white/50 text-xs mt-1 leading-relaxed line-clamp-2">
+                <h3 className="font-bold text-base theme-text">{zone.name}</h3>
+                <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isLight ? 'text-[#6b7e7e]' : 'text-white/50'}`}>
                   {zone.description}
                 </p>
-                <div className="mt-3 pt-3 border-t border-white/10 flex items-center justify-between text-xs text-white/40">
+                <div className={`mt-3 pt-3 border-t flex items-center justify-between text-xs ${
+                  isLight ? 'border-[#e8e2d9] text-[#94a3a3]' : 'border-white/10 text-white/40'
+                }`}>
                   <span>
                     {rooms.filter((r) => r.zoneId === zone.id).length} rooms
                   </span>
@@ -198,7 +212,7 @@ const ResourceAllocation = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.5 }}
       >
-        <h2 className="text-lg font-bold mb-4">Equipment & Resources</h2>
+        <h2 className="text-lg font-bold mb-4 theme-text">Equipment & Resources</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
           {resources.map((resource, idx) => (
             <motion.div
@@ -213,15 +227,15 @@ const ResourceAllocation = () => {
               >
                 <resource.icon className="text-white text-xl" />
               </div>
-              <h3 className="font-bold text-lg">{resource.name}</h3>
+              <h3 className="font-bold text-lg theme-text">{resource.name}</h3>
               <div className="mt-3">
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-white/60">Available</span>
-                  <span className="font-bold">
+                  <span className="theme-text-muted">Available</span>
+                  <span className="font-bold theme-text">
                     {resource.available} / {resource.total}
                   </span>
                 </div>
-                <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div className={`w-full h-2 rounded-full overflow-hidden ${isLight ? 'bg-[#f0ece4]' : 'bg-white/10'}`}>
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{

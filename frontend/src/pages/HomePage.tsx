@@ -13,6 +13,7 @@ import {
   Stethoscope,
 } from 'lucide-react';
 import hospitalBg from '../assets/images/hospital.png';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 const navTabs = [
   { path: '/dashboard', label: 'Dashboard', icon: <HeartPulse size={20} />, gradient: 'from-red-500 to-rose-600' },
@@ -26,109 +27,128 @@ const navTabs = [
 
 export default function HomePage() {
   const navigate = useNavigate();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
-      {/* ── Full-screen hospital background ── */}
+      {/* ── Full-screen background ── */}
       <div className="fixed inset-0 -z-10">
         <img
           src={hospitalBg}
           alt="Hospital"
           className="w-full h-full object-cover"
         />
-        {/* Dark overlay for contrast */}
-        <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/65 to-slate-950/85" />
-        {/* Subtle color accent */}
-        <div className="absolute inset-0 bg-gradient-to-tr from-primary-950/30 via-transparent to-purple-950/20" />
+        {/* Overlay */}
+        {isLight ? (
+          <>
+            {/* Dark green overlay — heavier center for text readability */}
+            <div className="absolute inset-0 bg-gradient-to-r from-[#0d2620]/75 via-[#142f28]/60 to-[#0d2620]/40" />
+            <div className="absolute inset-0 bg-gradient-to-b from-[#0a1f1a]/50 via-[#142f28]/30 to-[#0a1f1a]/60" />
+          </>
+        ) : (
+          <>
+            <div className="absolute inset-0 bg-gradient-to-b from-slate-950/75 via-slate-900/65 to-slate-950/85" />
+            <div className="absolute inset-0 bg-gradient-to-tr from-primary-950/30 via-transparent to-purple-950/20" />
+          </>
+        )}
       </div>
 
-      {/* ── Main Content ── */}
-      <div className="flex-1 flex items-center justify-center px-4 py-12 relative z-10">
-        <motion.div
-          initial={{ opacity: 0, y: 30, scale: 0.97 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          transition={{ duration: 0.7, ease: 'easeOut' }}
-          className="w-full max-w-2xl"
-        >
-          {/* ── Glassmorphism Card ── */}
-          <div className="relative backdrop-blur-3xl bg-white/[0.06] border border-white/[0.12] rounded-3xl shadow-2xl overflow-hidden">
-            {/* Inner glow accent */}
-            <div className="absolute top-0 left-1/2 -translate-x-1/2 w-2/3 h-px bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+      {/* ── Hero Content ── */}
+      <div className="flex-1 flex items-center relative z-10">
+        <div className="w-full max-w-3xl mx-auto px-8 py-16 text-center">
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.7, ease: 'easeOut' }}
+            className="flex flex-col items-center"
+          >
+            {/* Logo */}
+            <motion.div
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ delay: 0.15, duration: 0.5 }}
+              className="mb-8 flex justify-center"
+            >
+              <div className={`w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg ${
+                isLight
+                  ? 'bg-[#247B7B] shadow-[#247B7B]/25'
+                  : 'bg-gradient-to-br from-primary-500 to-purple-600 shadow-primary-500/30'
+              }`}>
+                <Stethoscope size={26} className="text-white" />
+              </div>
+            </motion.div>
 
-            <div className="px-8 py-12 md:px-12 md:py-16 text-center">
-              {/* Logo / Icon */}
-              <motion.div
-                initial={{ scale: 0.8, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ delay: 0.2, duration: 0.5 }}
-                className="flex justify-center mb-6"
+            {/* Heading */}
+            <motion.h1
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.25, duration: 0.5 }}
+              className="text-4xl md:text-5xl lg:text-[3.4rem] font-extrabold tracking-tight leading-[1.1] mb-5 text-white"
+              style={isLight ? { textShadow: '0 2px 12px rgba(0,0,0,0.35)' } : undefined}
+            >
+              Welcome to{' '}
+              <span
+                className={isLight
+                  ? 'bg-gradient-to-r from-[#5ee6c8] to-[#7af0d8] bg-clip-text text-transparent font-extrabold'
+                  : 'bg-gradient-to-r from-primary-300 via-purple-300 to-pink-300 bg-clip-text text-transparent'
+                }
+                style={isLight ? { WebkitTextFillColor: 'transparent', filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.3))' } : undefined}
               >
-                <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-primary-500 to-purple-600 flex items-center justify-center shadow-lg shadow-primary-500/30">
-                  <Stethoscope size={28} className="text-white" />
-                </div>
-              </motion.div>
+                VitalPass
+              </span>
+            </motion.h1>
 
-              {/* Title */}
-              <motion.h1
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.3, duration: 0.5 }}
-                className="text-4xl md:text-5xl font-extrabold text-white tracking-tight leading-tight mb-4"
-              >
-                Welcome to{' '}
-                <span className="bg-gradient-to-r from-primary-300 via-purple-300 to-pink-300 bg-clip-text text-transparent">
-                  VitalPass
-                </span>
-              </motion.h1>
+            {/* Subtitle */}
+            <motion.p
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.35, duration: 0.5 }}
+              className="text-base md:text-lg leading-relaxed max-w-lg mb-10 text-white/85 mx-auto"
+              style={isLight ? { textShadow: '0 1px 6px rgba(0,0,0,0.3)' } : undefined}
+            >
+              A smart emergency healthcare system that enables quick access to
+              patient medical records and supports efficient triage during
+              critical situations.
+            </motion.p>
 
-              {/* Description */}
-              <motion.p
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.4, duration: 0.5 }}
-                className="text-base md:text-lg text-white/70 leading-relaxed max-w-lg mx-auto mb-10"
-              >
-                VitalPass is a smart emergency healthcare system that enables
-                quick access to patient medical records and supports efficient
-                triage during critical situations.
-              </motion.p>
-
-              {/* CTA Button */}
-              <motion.button
-                initial={{ opacity: 0, y: 15 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.5, duration: 0.5 }}
-                onClick={() => navigate('/triage')}
-                whileHover={{ scale: 1.04, boxShadow: '0 20px 40px rgba(99, 102, 241, 0.35)' }}
-                whileTap={{ scale: 0.97 }}
-                className="inline-flex items-center gap-3 px-8 py-4 rounded-2xl
-                  bg-gradient-to-r from-primary-500 to-primary-600
-                  text-white font-semibold text-base
-                  shadow-xl shadow-primary-500/25
-                  hover:from-primary-600 hover:to-primary-700
-                  transition-all duration-300 cursor-pointer"
-              >
-                <Activity size={18} />
-                Start Triage
-                <ArrowRight size={16} />
-              </motion.button>
-            </div>
-
-            {/* Bottom shine */}
-            <div className="absolute bottom-0 left-1/2 -translate-x-1/2 w-1/2 h-px bg-gradient-to-r from-transparent via-white/20 to-transparent" />
-          </div>
-        </motion.div>
+            {/* CTA Button */}
+            <motion.button
+              initial={{ opacity: 0, y: 15 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.45, duration: 0.5 }}
+              onClick={() => navigate('/triage')}
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.97 }}
+              className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl
+                text-white font-semibold text-base
+                transition-all duration-300 cursor-pointer ${
+                  isLight
+                    ? 'bg-[#247B7B] hover:bg-[#1e6868] shadow-lg shadow-[#247B7B]/30 hover:shadow-xl hover:shadow-[#247B7B]/40'
+                    : 'bg-gradient-to-r from-primary-500 to-primary-600 shadow-[0_10px_30px_rgba(99,102,241,0.35)] hover:from-primary-600 hover:to-primary-700'
+                }`}
+            >
+              <Activity size={18} />
+              Start Triage
+              <ArrowRight size={16} />
+            </motion.button>
+          </motion.div>
+        </div>
       </div>
 
       {/* ── Bottom Navigation Bar ── */}
       <motion.div
         initial={{ opacity: 0, y: 30 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.7, duration: 0.6 }}
+        transition={{ delay: 0.65, duration: 0.6 }}
         className="relative z-10 pb-6 px-4"
       >
         <div className="max-w-5xl mx-auto">
-          <div className="backdrop-blur-3xl bg-white/[0.05] border border-white/[0.1] rounded-2xl p-3 shadow-2xl">
+          <div className={`p-3 rounded-2xl shadow-2xl ${
+            isLight
+              ? 'bg-white/20 backdrop-blur-xl border border-white/25 shadow-black/10'
+              : 'backdrop-blur-3xl bg-white/[0.05] border border-white/[0.1]'
+          }`}>
             <div className="grid grid-cols-4 md:grid-cols-7 gap-2">
               {navTabs.map((tab, i) => (
                 <motion.button
@@ -136,11 +156,15 @@ export default function HomePage() {
                   onClick={() => navigate(tab.path)}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.8 + i * 0.05 }}
+                  transition={{ delay: 0.75 + i * 0.04 }}
                   whileHover={{ y: -3, scale: 1.03 }}
                   whileTap={{ scale: 0.96 }}
-                  className="flex flex-col items-center gap-2 py-3 px-2 rounded-xl
-                    hover:bg-white/10 transition-all duration-200 cursor-pointer group"
+                  className={`flex flex-col items-center gap-2 py-3 px-2 rounded-xl
+                    transition-all duration-200 cursor-pointer group ${
+                      isLight
+                        ? 'hover:bg-white/30'
+                        : 'hover:bg-white/10'
+                    }`}
                 >
                   <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${tab.gradient}
                     flex items-center justify-center text-white shadow-md
@@ -148,8 +172,11 @@ export default function HomePage() {
                   >
                     {tab.icon}
                   </div>
-                  <span className="text-[11px] font-medium text-white/70 group-hover:text-white
-                    text-center leading-tight transition-colors duration-200"
+                  <span className={`text-[11px] font-medium text-center leading-tight transition-colors duration-200 ${
+                    isLight
+                      ? 'text-white/80 group-hover:text-white'
+                      : 'text-white/70 group-hover:text-white'
+                  }`}
                   >
                     {tab.label}
                   </span>

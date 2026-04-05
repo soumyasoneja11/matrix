@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { FaMicrophone, FaStop, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface VoiceCaptureButtonProps {
   onTranscript: (text: string) => void;
@@ -11,6 +12,8 @@ const VoiceCaptureButton: React.FC<VoiceCaptureButtonProps> = ({ onTranscript, l
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [recognition, setRecognition] = useState<any>(null);
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   useEffect(() => {
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
@@ -70,10 +73,12 @@ const VoiceCaptureButton: React.FC<VoiceCaptureButtonProps> = ({ onTranscript, l
       onClick={toggleListening}
       disabled={isProcessing}
       className={`
-        relative w-full py-4 rounded-xl font-semibold transition-all duration-300
+        relative w-full py-4 rounded-xl font-semibold transition-all duration-300 text-white
         ${isListening 
           ? 'bg-gradient-to-r from-red-600 to-red-700 shadow-red-500/50 shadow-lg' 
-          : 'bg-gradient-to-r from-primary-600 to-purple-600 hover:shadow-primary-500/50 hover:shadow-lg'
+          : isLight
+            ? 'bg-[#247B7B] hover:bg-[#274f49] hover:shadow-lg'
+            : 'bg-gradient-to-r from-primary-600 to-purple-600 hover:shadow-primary-500/50 hover:shadow-lg'
         }
         ${isProcessing && 'opacity-50 cursor-not-allowed'}
       `}
