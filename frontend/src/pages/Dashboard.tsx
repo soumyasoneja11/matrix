@@ -3,22 +3,66 @@ import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
 import StatsCard from '../components/StatsCard';
 import { fetchPatients } from '../services/api';
-import { Patient } from '../types';
+import { Patient, TriageLevel } from '../types';
 import { FaAmbulance, FaClock, FaCheckCircle, FaChartLine } from 'react-icons/fa';
 import { motion } from 'framer-motion';
+import { useTheme } from '../hooks/contexts/ThemeContext';
+
+const DEMO_PATIENTS: Patient[] = [
+  {
+    id: 9001,
+    name: 'Maria Gonzalez',
+    age: 58,
+    description: 'Severe chest pain radiating to left arm, shortness of breath, diaphoresis. History of hypertension. BP 180/110, HR 112, SpO2 91%.',
+    triageLevel: TriageLevel.CRITICAL,
+    assignedStaff: 'Dr. Sarah Chen',
+    location: 'Trauma Bay 1',
+    vitals: { heartRate: 112, bloodPressure: '180/110', temperature: 37.2, oxygenSaturation: 91 },
+    createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
+    updatedAt: new Date(Date.now() - 5 * 60000).toISOString(),
+  },
+  {
+    id: 9002,
+    name: 'Robert Kim',
+    age: 34,
+    description: 'Fall from ladder, suspected right tibial fracture. Moderate pain 7/10, swelling at mid-shaft. Neurovascularly intact distally.',
+    triageLevel: TriageLevel.URGENT,
+    assignedStaff: 'Dr. James Wilson',
+    location: 'Room AC-3',
+    vitals: { heartRate: 88, bloodPressure: '135/85', temperature: 36.8, oxygenSaturation: 98 },
+    createdAt: new Date(Date.now() - 45 * 60000).toISOString(),
+    updatedAt: new Date(Date.now() - 20 * 60000).toISOString(),
+  },
+  {
+    id: 9003,
+    name: 'Emily Patel',
+    age: 22,
+    description: 'Sore throat for 3 days, mild fever, no difficulty swallowing or breathing. No known allergies. Vitals stable.',
+    triageLevel: TriageLevel.STANDARD,
+    assignedStaff: 'Nurse Rodriguez',
+    location: 'Waiting Area B',
+    vitals: { heartRate: 72, bloodPressure: '118/75', temperature: 37.8, oxygenSaturation: 99 },
+    createdAt: new Date(Date.now() - 90 * 60000).toISOString(),
+    updatedAt: new Date(Date.now() - 60 * 60000).toISOString(),
+  },
+];
 
 const Dashboard = () => {
-  const [patients, setPatients] = useState<Patient[]>([]);
+  const [patients, setPatients] = useState<Patient[]>(DEMO_PATIENTS);
   const [loading, setLoading] = useState(true);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const loadPatients = async () => {
     try {
       const data = await fetchPatients();
-      setPatients(data);
+      setPatients(data.length > 0 ? data : DEMO_PATIENTS);
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Failed to load patients:', error);
+      // Keep demo patients on error
+      if (patients.length === 0) setPatients(DEMO_PATIENTS);
     } finally {
       setLoading(false);
     }
@@ -44,8 +88,8 @@ const Dashboard = () => {
         animate={{ opacity: 1, y: 0 }}
         className="mb-6"
       >
-        <h1 className="text-4xl font-bold gradient-text mb-2">Welcome to VITALPASS</h1>
-        <p className="text-white/60">
+        <h1 className={`text-4xl font-bold mb-2 ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Welcome to VITALPASS</h1>
+        <p className="theme-text-muted">
           An AI-driven Clinical Command Center that uses voice intelligence to automate ER triage,
           slash documentation time, and prioritize life-saving care in real-time.
         </p>
@@ -64,8 +108,8 @@ const Dashboard = () => {
         <div className="lg:col-span-2">
           {loading ? (
             <div className="glass-card p-12 text-center">
-              <div className="animate-spin w-8 h-8 border-4 border-primary-500 border-t-transparent rounded-full mx-auto mb-4" />
-              <p className="text-white/60">Loading triage dashboard...</p>
+              <div className={`animate-spin w-8 h-8 border-4 border-t-transparent rounded-full mx-auto mb-4 ${isLight ? 'border-[#247B7B]' : 'border-primary-500'}`} />
+              <p className="theme-text-muted">Loading triage dashboard...</p>
             </div>
           ) : (
             <TriageBoard patients={patients} onPatientUpdate={loadPatients} />
@@ -73,7 +117,7 @@ const Dashboard = () => {
         </div>
       </div>
       
-      <div className="text-center text-xs text-white/30 pt-4">
+      <div className={`text-center text-xs pt-4 ${isLight ? 'text-[#b0bfbf]' : 'text-white/30'}`}>
         Last updated: {lastUpdate.toLocaleTimeString()} · Live data feed active
       </div>
     </div>

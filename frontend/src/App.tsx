@@ -1,5 +1,6 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/contexts/AuthContext';
+import { useTheme } from './hooks/contexts/ThemeContext';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
@@ -14,13 +15,17 @@ import { SignUpPage } from './pages/SignUpPage';
 
 function App() {
   const { user, loading } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="flex flex-col items-center gap-4">
-          <div className="w-10 h-10 border-4 border-primary-500 border-t-transparent rounded-full animate-spin" />
-          <p className="text-white/60 text-sm">Loading VITALPASS...</p>
+          <div className={`w-10 h-10 border-4 border-t-transparent rounded-full animate-spin ${
+            isLight ? 'border-[#247B7B]' : 'border-primary-500'
+          }`} />
+          <p className="theme-text-muted text-sm">Loading VITALPASS...</p>
         </div>
       </div>
     );

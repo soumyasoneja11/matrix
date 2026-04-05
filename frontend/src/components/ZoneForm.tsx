@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface ZoneFormData {
   name: string;
@@ -17,6 +18,8 @@ const ZoneForm: React.FC<ZoneFormProps> = ({ onSubmit }) => {
     severityBand: 'RED',
     description: '',
   });
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -31,6 +34,10 @@ const ZoneForm: React.FC<ZoneFormProps> = ({ onSubmit }) => {
     GREEN: 'text-emerald-400',
   };
 
+  const inputClass = isLight
+    ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e] placeholder-[#b0bfbf]'
+    : 'bg-white/5 border-white/10 text-white placeholder-white/30';
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -38,42 +45,42 @@ const ZoneForm: React.FC<ZoneFormProps> = ({ onSubmit }) => {
       transition={{ delay: 0.2 }}
       className="glass-card p-6"
     >
-      <h3 className="text-lg font-bold mb-1">Create Care Zone</h3>
-      <p className="text-white/40 text-sm mb-5">Expand your care capacity</p>
+      <h3 className="text-lg font-bold mb-1 theme-text">Create Care Zone</h3>
+      <p className="theme-text-subtle text-sm mb-5">Expand your care capacity</p>
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1.5">Zone Name</label>
+          <label className={`block text-sm font-medium mb-1.5 ${isLight ? 'text-[#3d5555]' : 'text-white/70'}`}>Zone Name</label>
           <input
             type="text"
             value={form.name}
             onChange={(e) => setForm({ ...form, name: e.target.value })}
             placeholder="e.g. Trauma Bay"
-            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all"
+            className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all ${inputClass}`}
           />
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1.5">Severity Band</label>
+          <label className={`block text-sm font-medium mb-1.5 ${isLight ? 'text-[#3d5555]' : 'text-white/70'}`}>Severity Band</label>
           <select
             value={form.severityBand}
             onChange={(e) => setForm({ ...form, severityBand: e.target.value })}
-            className={`w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all appearance-none cursor-pointer ${severityColors[form.severityBand] || ''}`}
+            className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all appearance-none cursor-pointer ${inputClass} ${severityColors[form.severityBand] || ''}`}
           >
-            <option value="RED" className="bg-slate-900 text-red-400">RED</option>
-            <option value="YELLOW" className="bg-slate-900 text-amber-400">YELLOW</option>
-            <option value="GREEN" className="bg-slate-900 text-emerald-400">GREEN</option>
+            <option value="RED" className={isLight ? '' : 'bg-slate-900 text-red-400'}>RED</option>
+            <option value="YELLOW" className={isLight ? '' : 'bg-slate-900 text-amber-400'}>YELLOW</option>
+            <option value="GREEN" className={isLight ? '' : 'bg-slate-900 text-emerald-400'}>GREEN</option>
           </select>
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-white/70 mb-1.5">Description</label>
+          <label className={`block text-sm font-medium mb-1.5 ${isLight ? 'text-[#3d5555]' : 'text-white/70'}`}>Description</label>
           <textarea
             value={form.description}
             onChange={(e) => setForm({ ...form, description: e.target.value })}
             placeholder="Zone purpose and details..."
             rows={3}
-            className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all resize-none"
+            className={`w-full px-4 py-2.5 border rounded-xl focus:outline-none focus:border-primary-500 focus:ring-1 focus:ring-primary-500/50 transition-all resize-none ${inputClass}`}
           />
         </div>
 
