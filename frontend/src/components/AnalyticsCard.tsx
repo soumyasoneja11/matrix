@@ -29,21 +29,27 @@ const AnalyticsCard: React.FC<AnalyticsCardProps> = ({
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay, duration: 0.4 }}
       whileHover={{ y: -4, scale: 1.02 }}
-      className={`glass-card p-5 hover:shadow-xl transition-all duration-300 ${
-        accent
-          ? isLight
-            ? 'border-[#247B7B]/30 ring-1 ring-[#247B7B]/20'
-            : 'border-primary-500/30 ring-1 ring-primary-500/20'
-          : ''
+      className={`p-5 rounded-xl transition-all duration-200 ${
+        isLight
+          ? `bg-gradient-to-br from-[#247B7B] to-[#4C9A8E] shadow-md hover:shadow-lg ${
+              accent ? 'ring-2 ring-white/30' : ''
+            }`
+          : `glass-card hover:shadow-xl ${
+              accent ? 'border-primary-500/30 ring-1 ring-primary-500/20' : ''
+            }`
       }`}
     >
       <div className="flex items-center justify-between">
         <div className="flex-1 min-w-0">
-          <p className="theme-text-muted text-sm font-medium truncate">{label}</p>
-          <p className="text-3xl font-bold mt-1.5 tracking-tight theme-text">{value}</p>
+          <p className={`text-sm font-medium truncate ${isLight ? 'text-white/80' : 'theme-text-muted'}`}>{label}</p>
+          <p className={`text-3xl font-bold mt-1.5 tracking-tight ${isLight ? 'text-white' : 'theme-text'}`}>{value}</p>
         </div>
         <div
-          className={`w-12 h-12 rounded-xl bg-gradient-to-r ${gradient} flex items-center justify-center shadow-lg flex-shrink-0 ml-3`}
+          className={`w-12 h-12 rounded-xl flex items-center justify-center shadow-lg flex-shrink-0 ml-3 ${
+            isLight
+              ? 'bg-white/20'
+              : `bg-gradient-to-r ${gradient}`
+          }`}
         >
           <Icon className="text-white text-xl" />
         </div>

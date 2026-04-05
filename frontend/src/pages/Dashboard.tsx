@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
-import StatsCard from '../components/StatsCard';
 import { fetchPatients } from '../services/api';
 import { Patient, TriageLevel } from '../types';
-import { FaAmbulance, FaClock, FaCheckCircle, FaChartLine } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
@@ -74,33 +72,9 @@ const Dashboard = () => {
     return () => clearInterval(interval);
   }, []);
 
-  const stats = [
-    { icon: FaAmbulance, label: 'Active Patients', value: patients.length, color: 'from-blue-500 to-cyan-500' },
-    { icon: FaClock, label: 'Avg Wait Time', value: '4.2 min', color: 'from-yellow-500 to-orange-500' },
-    { icon: FaCheckCircle, label: 'Triage Completed', value: '87%', color: 'from-green-500 to-emerald-500' },
-    { icon: FaChartLine, label: 'Critical Cases', value: patients.filter(p => p.triageLevel === 'CRITICAL').length, color: 'from-red-500 to-pink-500' },
-  ];
-
   return (
     <div className="space-y-6">
-      <motion.div
-        initial={{ opacity: 0, y: -20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="mb-6"
-      >
-        <h1 className={`text-4xl font-bold mb-2 ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>Welcome to VITALPASS</h1>
-        <p className="theme-text-muted">
-          An AI-driven Clinical Command Center that uses voice intelligence to automate ER triage,
-          slash documentation time, and prioritize life-saving care in real-time.
-        </p>
-      </motion.div>
-      
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-        {stats.map((stat, idx) => (
-          <StatsCard key={idx} {...stat} delay={idx * 0.1} />
-        ))}
-      </div>
-      
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <PatientTriageForm onPatientAdded={loadPatients} />

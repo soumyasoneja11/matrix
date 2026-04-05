@@ -7,7 +7,7 @@ const Footer: React.FC = () => {
   const isLight = theme === 'light';
 
   return (
-    <footer className={`mt-12 border-t ${isLight ? 'border-[#e8e2d9] bg-[#f8f6f1]' : 'border-white/10 bg-white/[0.03] backdrop-blur-sm'}`}>
+    <footer className={`mt-12 border-t ${isLight ? 'border-[#d8e8e4] bg-gradient-to-b from-[#247B7B]/15 to-white' : 'border-white/10 bg-white/[0.03] backdrop-blur-sm'}`}>
       <div className="max-w-7xl mx-auto px-6 py-10">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           {/* Column 1: ER Triage System */}

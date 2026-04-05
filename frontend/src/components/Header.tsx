@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { FaBell, FaUserCircle, FaSearch, FaCloudSun } from 'react-icons/fa';
+import { FaBell, FaUserCircle, FaSearch } from 'react-icons/fa';
 import { Sun, Moon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
@@ -9,9 +9,10 @@ const Header = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const { theme, toggleTheme } = useTheme();
   const { isCollapsed, toggleSidebar } = useSidebar();
+  const isLight = theme === 'light';
 
   return (
-    <header className="glass-card m-4 mb-0 px-6 py-4 flex justify-between items-center">
+    <header className="glass-card m-4 mb-0 px-5 py-2.5 flex justify-between items-center">
       <div className="flex items-center gap-3 flex-1 max-w-md">
         {/* Sidebar Toggle */}
         <motion.button
@@ -41,10 +42,7 @@ const Header = () => {
       </div>
       
       <div className="flex items-center gap-4">
-        <div className="flex items-center gap-2 px-3 py-1.5 theme-bg-accent rounded-full">
-          <FaCloudSun className="text-yellow-400" />
-          <span className="text-sm theme-text">24°C · Light rain</span>
-        </div>
+
 
         {/* Theme Toggle */}
         <motion.button
