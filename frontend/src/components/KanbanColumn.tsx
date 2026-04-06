@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
-import { Patient } from '../types';
+import { Patient, TriageLevel, Vitals } from '../types';
 import PatientCard from './PatientCard';
 
 interface KanbanColumnProps {
@@ -18,6 +18,11 @@ interface KanbanColumnProps {
   patients: Patient[];
   onPatientUpdate: () => void;
   idx: number; // for staggered animation
+  onReTriage?: (patientId: string, updatedData: {
+    description?: string;
+    vitals?: Vitals;
+    triageLevel: TriageLevel;
+  }) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -33,14 +38,22 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   patients,
   onPatientUpdate,
   idx,
+  onReTriage,
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  // Accordion state — only one card expanded per column
+  const [expandedCardId, setExpandedCardId] = useState<string | null>(null);
 
   const { isOver, setNodeRef } = useDroppable({
     id,
     data: { columnId: id },
   });
+
+  const handleToggleExpand = (patientId: string) => {
+    setExpandedCardId(prev => prev === patientId ? null : patientId);
+  };
 
   return (
     <motion.div
@@ -81,7 +94,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           </div>
         ) : (
           patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} onUpdate={onPatientUpdate} />
+            <PatientCard
+              key={patient.id}
+              patient={patient}
+              onUpdate={onPatientUpdate}
+              isExpanded={expandedCardId === patient.id}
+              onToggleExpand={() => handleToggleExpand(patient.id)}
+              onReTriage={onReTriage}
+            />
           ))
         )}
       </div>

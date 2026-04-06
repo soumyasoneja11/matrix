@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Patient, TriageLevel } from '../types';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Patient, TriageLevel, Vitals } from '../types';
 import KanbanColumn from './KanbanColumn';
 import ConfirmationModal from './ConfirmationModal';
 import ToastNotification from './ToastNotification';
@@ -161,6 +161,53 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
     setPauseRefresh(false);
   };
 
+  // ── Re-triage handler ──
+  const handleReTriage = useCallback((patientId: string, updatedData: {
+    description?: string;
+    vitals?: Vitals;
+    triageLevel: TriageLevel;
+  }) => {
+    const base = committedPatientsRef.current ?? patients;
+    const targetPatient = base.find(p => p.id === patientId);
+    if (!targetPatient) return;
+
+    const oldLevel = targetPatient.triageLevel;
+    const newLevel = updatedData.triageLevel;
+    const patientName = targetPatient.name || 'Patient';
+
+    // Optimistic local update
+    committedPatientsRef.current = base.map(p =>
+      p.id === patientId
+        ? {
+            ...p,
+            description: updatedData.description ?? p.description,
+            vitals: updatedData.vitals ?? p.vitals,
+            triageLevel: newLevel,
+            updatedAt: new Date().toISOString(),
+          }
+        : p
+    );
+
+    forceRender();
+
+    // Notify
+    if (oldLevel !== newLevel) {
+      const msg = `${patientName} re-triaged: ${oldLevel} → ${newLevel}`;
+      setToast({ id: Date.now().toString(), message: msg, type: 'success' });
+      addNotification(msg, 'success');
+    } else {
+      const msg = `${patientName} vitals updated (priority unchanged)`;
+      setToast({ id: Date.now().toString(), message: msg, type: 'success' });
+      addNotification(msg, 'success');
+    }
+
+    // Release the ref after a short delay so next auto-refresh picks up
+    setTimeout(() => {
+      committedPatientsRef.current = null;
+      forceRender();
+    }, 2000);
+  }, [patients, addNotification]);
+
   const criticalPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.CRITICAL);
   const urgentPatients   = displayPatients.filter(p => p.triageLevel === TriageLevel.URGENT);
   const standardPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.STANDARD);
@@ -231,6 +278,7 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
               {...col}
               onPatientUpdate={onPatientUpdate}
               idx={idx}
+              onReTriage={handleReTriage}
             />
           ))}
         </div>
