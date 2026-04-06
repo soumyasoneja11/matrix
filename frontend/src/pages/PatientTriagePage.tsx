@@ -30,6 +30,8 @@ interface PatientTriagePageProps {
 }
 
 export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientTriagePageProps) {
+  console.log('patients:', patients);
+  console.log('urgent:', patients.filter(p => p.priority === 'YELLOW'));
   const [language, setLanguage] = useState('en-US');
   const [patientText, setPatientText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
@@ -59,9 +61,9 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
   const handleClear = () => { setPatientText(''); resetTranscript(); };
   const toggleMic = () => { isListening ? stopListening() : startListening(); };
 
-  const criticalPatients = patients.filter((p) => p.triageLevel === 'CRITICAL');
-  const urgentPatients = patients.filter((p) => p.triageLevel === 'URGENT');
-  const standardPatients = patients.filter((p) => p.triageLevel === 'STANDARD');
+  const criticalPatients = patients.filter((p) => p.priority === 'RED' || p.priority === 'ORANGE');
+  const urgentPatients = patients.filter((p) => p.priority === 'YELLOW');
+  const standardPatients = patients.filter((p) => p.priority === 'GREEN' || p.priority === 'BLUE');
 
   return (
     <div className="space-y-12">
@@ -345,7 +347,7 @@ function PatientCardEnhanced({ patient, color, index }: { patient: Patient; colo
       <div className="flex justify-between items-start mb-2">
         <h4 className="font-bold text-forest-900 line-clamp-1">{patient.name || 'Unnamed Patient'}</h4>
         <Badge variant={color === 'red' ? 'critical' : color === 'amber' ? 'urgent' : 'standard'} className="text-[10px]">
-          {patient.triageLevel || 'UNKNOWN'}
+          {patient.priority || patient.triageLevel || 'UNKNOWN'}
         </Badge>
       </div>
       {(patient.age !== undefined && patient.age !== null) && (

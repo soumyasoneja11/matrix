@@ -44,13 +44,14 @@ export interface Vitals {
 }
 
 export interface Patient {
-  id: string; // Unified to string for MongoDB compatibility
+  id: string;
   name: string;
   age?: number;
   gender?: string;
   chiefComplaint?: string;
   description?: string;
   triageLevel: TriageLevel;
+  priority?: 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN' | 'BLUE'; // ← ADD THIS
   status?: string;
   zoneName?: string;
   roomCode?: string;
