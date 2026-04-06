@@ -70,8 +70,12 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
   };
 
   const severity = getSeverityConfig();
+
+  
+
   const createdDateStr = patient?.createdAt || patient?.updatedAt || new Date().toISOString();
   const createdDate = new Date(createdDateStr);
+
 
   const triageRationale: Record<string, { text: string; confidence: number }> = {
     CRITICAL: { text: 'Patient presents with high-acuity symptoms requiring immediate intervention. Vital signs indicate hemodynamic instability.', confidence: 92 },
@@ -81,14 +85,13 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
 
   const rationale = triageRationale[patient.triageLevel] || triageRationale.STANDARD;
 
-  const sectionHeading = `text-[11px] font-semibold uppercase tracking-wider mb-2 ${
-    isLight ? 'text-gray-400' : 'text-white/40'
-  }`;
+  const sectionHeading = `text-[11px] font-semibold uppercase tracking-wider mb-2 ${isLight ? 'text-gray-400' : 'text-white/40'
+    }`;
 
   return createPortal(
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center">
           {/* Backdrop */}
           <motion.div
             initial={{ opacity: 0 }}
@@ -124,9 +127,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                     <h2 className={`text-xl font-bold truncate ${isLight ? 'text-gray-900' : 'text-white'}`}>
                       {patient.name || 'Unnamed Patient'}
                     </h2>
-                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-mono ${
-                      isLight ? 'bg-gray-100 text-gray-500' : 'bg-white/10 text-white/50'
-                    }`}>
+                    <span className={`flex-shrink-0 px-2 py-0.5 rounded-md text-[10px] font-mono ${isLight ? 'bg-gray-100 text-gray-500' : 'bg-white/10 text-white/50'
+                      }`}>
                       ID-{patient.id}
                     </span>
                   </div>
@@ -141,9 +143,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                 </span>
                 <button
                   onClick={onClose}
-                  className={`p-1.5 rounded-lg transition-colors ${
-                    isLight ? 'hover:bg-gray-100 text-gray-400' : 'hover:bg-white/10 text-white/40'
-                  }`}
+                  className={`p-1.5 rounded-lg transition-colors ${isLight ? 'hover:bg-gray-100 text-gray-400' : 'hover:bg-white/10 text-white/40'
+                    }`}
                 >
                   <X size={18} />
                 </button>
@@ -166,7 +167,9 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                 {patient.vitals && (
                   <section>
                     <h3 className={`${sectionHeading} flex items-center gap-1.5`}>
-                      <FaHeartbeat className="text-red-400" size={12} />
+                      <span className="text-red-400">
+                      <FaHeartbeat size={12} />
+                      </span>
                       Vitals
                     </h3>
                     <div className="grid grid-cols-3 gap-3">
@@ -195,9 +198,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                 {/* C. Raw Intake Input */}
                 <section>
                   <h3 className={sectionHeading}>Raw Intake Input</h3>
-                  <div className={`px-4 py-3 rounded-xl text-sm font-mono leading-relaxed break-words whitespace-pre-wrap ${
-                    isLight ? 'bg-gray-50 text-gray-600 border border-gray-100' : 'bg-white/5 text-white/70 border border-white/10'
-                  }`}>
+                  <div className={`px-4 py-3 rounded-xl text-sm font-mono leading-relaxed break-words whitespace-pre-wrap ${isLight ? 'bg-gray-50 text-gray-600 border border-gray-100' : 'bg-white/5 text-white/70 border border-white/10'
+                    }`}>
                     "{patient.description}"
                   </div>
                 </section>
@@ -235,17 +237,17 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                       isLight={isLight}
                       dotColor={severity.dot}
                     />
-                    {(patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId) && (
-                      <TimelineItem
-                        label="Assignment"
-                        desc={`Assigned to ${patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId}`}
-                        time={new Date(patient?.updatedAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                        actor="System"
-                        isLight={isLight}
-                        dotColor="bg-purple-500"
-                        isLast
-                      />
-                    )}
+{(patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId) && (
+  <TimelineItem
+    label="Assignment"
+    desc={`Assigned to ${patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId}`}
+    time={new Date(patient?.updatedAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+    actor="System"
+    isLight={isLight}
+    dotColor="bg-purple-500"
+    isLast
+  />
+)}
                   </div>
                 </section>
 
@@ -264,10 +266,9 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                         initial={{ width: 0 }}
                         animate={{ width: `${rationale.confidence}%` }}
                         transition={{ duration: 0.8, delay: 0.3 }}
-                        className={`h-full rounded-full ${
-                          patient.triageLevel === TriageLevel.CRITICAL ? 'bg-red-500' :
-                          patient.triageLevel === TriageLevel.URGENT ? 'bg-amber-500' : 'bg-emerald-500'
-                        }`}
+                        className={`h-full rounded-full ${patient.triageLevel === TriageLevel.CRITICAL ? 'bg-red-500' :
+                            patient.triageLevel === TriageLevel.URGENT ? 'bg-amber-500' : 'bg-emerald-500'
+                          }`}
                       />
                     </div>
                     <span className={`text-xs font-bold tabular-nums ${isLight ? 'text-gray-700' : 'text-white/80'}`}>
@@ -284,19 +285,17 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
               ${isLight ? 'bg-white border-gray-100 rounded-b-2xl' : 'bg-slate-900 border-white/10 rounded-b-2xl'}
             `}>
               <div className="flex gap-2">
-                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  isLight
+                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
                     ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                     : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10'
-                }`}>
+                  }`}>
                   <FaSignOutAlt size={13} />
                   Discharge
                 </button>
-                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${
-                  isLight
+                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
                     ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
                     : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10'
-                }`}>
+                  }`}>
                   <FaExchangeAlt size={13} />
                   Handoff
                 </button>
@@ -319,9 +318,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
 
 function VitalChip({ icon, label, value, isLight }: { icon: React.ReactNode; label: string; value: string; isLight: boolean }) {
   return (
-    <div className={`px-3 py-2.5 rounded-xl ${
-      isLight ? 'bg-gray-50 border border-gray-100' : 'bg-white/5 border border-white/10'
-    }`}>
+    <div className={`px-3 py-2.5 rounded-xl ${isLight ? 'bg-gray-50 border border-gray-100' : 'bg-white/5 border border-white/10'
+      }`}>
       <div className={`flex items-center gap-1.5 mb-1 ${isLight ? 'text-gray-400' : 'text-white/40'}`}>
         {icon}
         <span className="text-[10px] font-medium uppercase tracking-wider">{label}</span>
@@ -336,9 +334,8 @@ function TimelineItem({ label, desc, time, actor, isLight, dotColor, isLast = fa
 }) {
   return (
     <div className={`relative flex gap-3 ${isLast ? '' : 'pb-4'}`}>
-      <div className={`absolute left-[-15px] top-[5px] w-[9px] h-[9px] rounded-full ring-2 ${dotColor} ${
-        isLight ? 'ring-white' : 'ring-slate-900'
-      }`} />
+      <div className={`absolute left-[-15px] top-[5px] w-[9px] h-[9px] rounded-full ring-2 ${dotColor} ${isLight ? 'ring-white' : 'ring-slate-900'
+        }`} />
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
           <span className={`text-sm font-semibold ${isLight ? 'text-gray-800' : 'text-white/90'}`}>{label}</span>
