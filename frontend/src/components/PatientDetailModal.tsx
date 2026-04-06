@@ -1,35 +1,52 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X } from 'lucide-react';
 import { Patient, TriageLevel } from '../types';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import { FaHeartbeat, FaThermometerHalf, FaTint, FaSignOutAlt, FaExchangeAlt } from 'react-icons/fa';
+import DischargeConfirmModal from './DischargeConfirmModal';
+import HandoffModal from './HandoffModal';
 
 interface PatientDetailModalProps {
   patient: Patient;
   isOpen: boolean;
   onClose: () => void;
+  onDischarge?: (patient: Patient) => void;
+  onHandoff?: (patient: Patient, doctor: string, nurse: string) => void;
 }
 
-const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen, onClose }) => {
+const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen, onClose, onDischarge, onHandoff }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+
+  const [showDischargeModal, setShowDischargeModal] = useState(false);
+  const [showHandoffModal, setShowHandoffModal] = useState(false);
+  const [isProcessingDischarge, setIsProcessingDischarge] = useState(false);
 
   // Close on Escape key
   useEffect(() => {
     const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
+      if (e.key === 'Escape' && !showDischargeModal && !showHandoffModal) onClose();
     };
     if (isOpen) document.addEventListener('keydown', handleKey);
     return () => document.removeEventListener('keydown', handleKey);
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, showDischargeModal, showHandoffModal]);
 
   // Prevent body scroll when modal is open
   useEffect(() => {
     if (isOpen) document.body.style.overflow = 'hidden';
     else document.body.style.overflow = '';
     return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
+
+  // Reset sub-modal states when this modal closes
+  useEffect(() => {
+    if (!isOpen) {
+      setShowDischargeModal(false);
+      setShowHandoffModal(false);
+      setIsProcessingDischarge(false);
+    }
   }, [isOpen]);
 
   const getSeverityConfig = () => {
@@ -71,11 +88,8 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
 
   const severity = getSeverityConfig();
 
-  
-
   const createdDateStr = patient?.createdAt || patient?.updatedAt || new Date().toISOString();
   const createdDate = new Date(createdDateStr);
-
 
   const triageRationale: Record<string, { text: string; confidence: number }> = {
     CRITICAL: { text: 'Patient presents with high-acuity symptoms requiring immediate intervention. Vital signs indicate hemodynamic instability.', confidence: 92 },
@@ -87,6 +101,30 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
 
   const sectionHeading = `text-[11px] font-semibold uppercase tracking-wider mb-2 ${isLight ? 'text-gray-400' : 'text-white/40'
     }`;
+
+  // ── Discharge handler ──
+  const handleDischargeConfirm = () => {
+    if (isProcessingDischarge) return;
+    setIsProcessingDischarge(true);
+
+    if (onDischarge) {
+      onDischarge(patient);
+    }
+
+    setShowDischargeModal(false);
+    setIsProcessingDischarge(false);
+    onClose();
+  };
+
+  // ── Handoff handler ──
+  const handleHandoffConfirm = (doctor: string, nurse: string) => {
+    if (onHandoff) {
+      onHandoff(patient, doctor, nurse);
+    }
+
+    setShowHandoffModal(false);
+    onClose();
+  };
 
   return createPortal(
     <AnimatePresence>
@@ -285,17 +323,23 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
               ${isLight ? 'bg-white border-gray-100 rounded-b-2xl' : 'bg-slate-900 border-white/10 rounded-b-2xl'}
             `}>
               <div className="flex gap-2">
-                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
-                    ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                    : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10'
-                  }`}>
+                <button
+                  onClick={() => setShowDischargeModal(true)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
+                    ? 'bg-gray-50 text-gray-700 hover:bg-red-50 hover:text-red-600 border border-gray-200 hover:border-red-200'
+                    : 'bg-white/5 text-white/80 hover:bg-red-500/10 hover:text-red-400 border border-white/10 hover:border-red-500/30'
+                  }`}
+                >
                   <FaSignOutAlt size={13} />
                   Discharge
                 </button>
-                <button className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
-                    ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
-                    : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10'
-                  }`}>
+                <button
+                  onClick={() => setShowHandoffModal(true)}
+                  className={`inline-flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-medium transition-colors ${isLight
+                    ? 'bg-gray-50 text-gray-700 hover:bg-blue-50 hover:text-blue-600 border border-gray-200 hover:border-blue-200'
+                    : 'bg-white/5 text-white/80 hover:bg-blue-500/10 hover:text-blue-400 border border-white/10 hover:border-blue-500/30'
+                  }`}
+                >
                   <FaExchangeAlt size={13} />
                   Handoff
                 </button>
@@ -309,6 +353,22 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
           </motion.div>
         </div>
       )}
+
+      {/* ── Sub-modals (rendered above this modal) ── */}
+      <DischargeConfirmModal
+        isOpen={showDischargeModal}
+        onConfirm={handleDischargeConfirm}
+        onCancel={() => setShowDischargeModal(false)}
+        patientName={patient.name || 'Unnamed Patient'}
+        isProcessing={isProcessingDischarge}
+      />
+
+      <HandoffModal
+        isOpen={showHandoffModal}
+        onConfirm={handleHandoffConfirm}
+        onCancel={() => setShowHandoffModal(false)}
+        patient={patient}
+      />
     </AnimatePresence>,
     document.body
   );

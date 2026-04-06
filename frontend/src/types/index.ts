@@ -171,3 +171,29 @@ export interface StaffAssignment {
   assignedZone: string;
   assignedPatients: { id: string; name: string; triageLevel: string }[];
 }
+
+export interface PatientHistoryVisit {
+  id: string;
+  date: string;
+  complaint: string;
+  symptoms: string[];
+  vitals?: Vitals;
+  triageLevel: TriageLevel;
+  assignedDoctor?: string;
+  assignedNurse?: string;
+  department?: string;
+  medicines?: string[];
+  procedures?: string[];
+  notes?: string;
+  status: 'completed' | 'ongoing' | 'follow-up';
+}
+
+export interface PatientHistoryRecord {
+  id: string;
+  name: string;
+  age?: number;
+  gender?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  visits: PatientHistoryVisit[];
+}

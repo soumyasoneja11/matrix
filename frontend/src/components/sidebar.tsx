@@ -8,7 +8,8 @@ import {
   FaClipboardList, 
   FaChartLine, 
   FaTrashAlt,
-  FaMicrophone 
+  FaMicrophone,
+  FaHistory 
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
@@ -20,6 +21,7 @@ const navItems = [
   { path: '/staff-directory', icon: FaUsers, label: 'Staff Directory', color: 'from-purple-500 to-pink-500' },
   { path: '/staff-management', icon: FaUserCog, label: 'Staff Management', color: 'from-orange-500 to-red-500' },
   { path: '/my-worklist', icon: FaClipboardList, label: 'My Worklist', color: 'from-yellow-500 to-amber-500' },
+  { path: '/patient-history', icon: FaHistory, label: 'Patient History', color: 'from-teal-500 to-cyan-500' },
   { path: '/analytics', icon: FaChartLine, label: 'Analytics', color: 'from-indigo-500 to-purple-500' },
   { path: '/recycle-bin', icon: FaTrashAlt, label: 'Recycle Bin', color: 'from-gray-500 to-gray-700' },
 ];
