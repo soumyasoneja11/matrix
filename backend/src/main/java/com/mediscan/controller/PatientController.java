@@ -29,7 +29,7 @@ public class PatientController {
     }
 
     @PostMapping("/triage")
-    public ResponseEntity<Patient> triagePatient(@RequestBody TriageRequest request) {
+    public ResponseEntity<Patient> triagePatient(@Valid @RequestBody TriageRequest request) {
         Patient patient = patientService.triagePatient(request);
         return new ResponseEntity<>(patient, HttpStatus.CREATED);
     }

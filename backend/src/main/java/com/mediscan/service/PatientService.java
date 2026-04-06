@@ -10,10 +10,18 @@ import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 @Service
 public class PatientService {
-    
+
+    private static final Pattern PATIENT_NAME_PATTERN =
+        Pattern.compile("(?:patient|name)[:\\s]+([A-Za-z]+(?:\\s[A-Za-z]+)?)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern TITLE_NAME_PATTERN =
+        Pattern.compile("(?:Mr\\.|Mrs\\.|Ms\\.)\\s+([A-Za-z]+(?:\\s[A-Za-z]+)?)", Pattern.CASE_INSENSITIVE);
+    private static final Pattern AGE_WORD_PATTERN =
+        Pattern.compile("(\\d{1,3})\\s*(?:year|yr|y/o|yo|years)\\s*(?:old)?");
     @Autowired
     private PatientRepository patientRepository;
     
@@ -92,42 +100,36 @@ public class PatientService {
             "stroke", "trauma", "fall", "allergic reaction", "overdose", "poisoning"
         };
         for (String kw : complaintKeywords) {
-            if (lower.contains(kw)) {
+            if (!kw.isEmpty() && lower.contains(kw)) {
                 return Character.toUpperCase(kw.charAt(0)) + kw.substring(1);
             }
         }
         // Fallback: first sentence/clause
         String[] sentences = lower.split("[.;,!?]");
-        if (sentences.length > 0 && !sentences[0].isBlank()) {
+        if (sentences.length > 0) {
             String first = sentences[0].trim();
-            return Character.toUpperCase(first.charAt(0)) + first.substring(1);
+            if (!first.isEmpty()) {
+                return Character.toUpperCase(first.charAt(0)) + first.substring(1);
+            }
         }
         return "Chief complaint not specified";
     }
 
     private String extractName(String details) {
         if (details == null) return "Unknown Patient";
-        // Look for "name: ..." or "patient: ..." patterns
-        java.util.regex.Matcher m = java.util.regex.Pattern
-            .compile("(?:patient|name)[:\\s]+([A-Za-z]+(?:\\s[A-Za-z]+)?)", java.util.regex.Pattern.CASE_INSENSITIVE)
-            .matcher(details);
+        Matcher m = PATIENT_NAME_PATTERN.matcher(details);
         if (m.find()) return m.group(1).trim();
-        // Look for "Mr./Ms./Mrs. Name"
-        m = java.util.regex.Pattern
-            .compile("(?:Mr\\.|Mrs\\.|Ms\\.)\\s+([A-Za-z]+(?:\\s[A-Za-z]+)?)", java.util.regex.Pattern.CASE_INSENSITIVE)
-            .matcher(details);
+        m = TITLE_NAME_PATTERN.matcher(details);
         if (m.find()) return m.group(0).trim();
         return "Unknown Patient";
     }
 
     private Integer extractAge(String lower) {
-        java.util.regex.Matcher m = java.util.regex.Pattern
-            .compile("(\\d{1,3})\\s*(?:year|yr|y/o|yo|years)\\s*(?:old)?")
-            .matcher(lower);
+        Matcher m = AGE_WORD_PATTERN.matcher(lower);
         if (m.find()) {
             try { return Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {}
         }
-        m = java.util.regex.Pattern.compile("age[:\\s]+(\\d{1,3})").matcher(lower);
+        m = AGE_LABEL_PATTERN.matcher(lower);
         if (m.find()) {
             try { return Integer.parseInt(m.group(1)); } catch (NumberFormatException ignored) {}
         }
