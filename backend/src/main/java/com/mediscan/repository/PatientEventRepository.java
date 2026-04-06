@@ -8,6 +8,6 @@ import java.util.List;
 @Repository
 public interface PatientEventRepository extends MongoRepository<PatientEvent, String> {
     
-    List<PatientEvent> findByPatientIdOrderByTimestampDesc(String patientId);
+    List<PatientEvent> findByPatientIdOrderByCreatedAtDesc(String patientId);
     List<PatientEvent> findByEventType(String eventType);
 }
