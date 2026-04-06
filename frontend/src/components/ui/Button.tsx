@@ -1,5 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
+import { useTheme } from '../../hooks/contexts/ThemeContext';
 
 interface ButtonProps {
   children: React.ReactNode;
@@ -22,7 +23,10 @@ export function Button({
   type = 'button',
   fullWidth = false,
 }: ButtonProps) {
-  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2';
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
+  const baseStyles = 'inline-flex items-center justify-center gap-2 font-semibold rounded-xl transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 cursor-pointer';
 
   const variantStyles = {
     primary: `
@@ -33,30 +37,15 @@ export function Button({
       shadow-md hover:shadow-lg
       disabled:from-forest-300 disabled:to-forest-400 disabled:cursor-not-allowed
     `,
-    secondary: `
-      bg-white 
-      text-forest-800 
-      border border-forest-200 
-      hover:bg-forest-50 hover:border-forest-300
-      focus:ring-forest-400
-      shadow-sm hover:shadow-md
-      disabled:bg-forest-50 disabled:text-forest-400 disabled:cursor-not-allowed
-    `,
-    outline: `
-      bg-transparent 
-      text-forest-700 
-      border-2 border-forest-300 
-      hover:bg-forest-50 hover:border-forest-400
-      focus:ring-forest-400
-      disabled:text-forest-400 disabled:border-forest-200 disabled:cursor-not-allowed
-    `,
-    ghost: `
-      bg-transparent 
-      text-forest-700 
-      hover:bg-forest-50
-      focus:ring-forest-300
-      disabled:text-forest-400 disabled:cursor-not-allowed
-    `,
+    secondary: isLight
+      ? `bg-white text-forest-800 border border-forest-200 hover:bg-forest-50 hover:border-forest-300 focus:ring-forest-400 shadow-sm hover:shadow-md disabled:bg-forest-50 disabled:text-forest-400 disabled:cursor-not-allowed`
+      : `bg-white/5 text-gray-200 border border-gray-600 hover:bg-white/10 hover:border-gray-500 focus:ring-gray-500 shadow-sm disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed`,
+    outline: isLight
+      ? `bg-transparent text-forest-700 border-2 border-forest-300 hover:bg-forest-50 hover:border-forest-400 focus:ring-forest-400 disabled:text-forest-400 disabled:border-forest-200 disabled:cursor-not-allowed`
+      : `bg-transparent text-gray-300 border-2 border-gray-600 hover:bg-white/5 hover:border-gray-500 focus:ring-gray-500 disabled:text-gray-600 disabled:border-gray-700 disabled:cursor-not-allowed`,
+    ghost: isLight
+      ? `bg-transparent text-forest-700 hover:bg-forest-50 focus:ring-forest-300 disabled:text-forest-400 disabled:cursor-not-allowed`
+      : `bg-transparent text-gray-300 hover:bg-white/10 focus:ring-gray-600 disabled:text-gray-600 disabled:cursor-not-allowed`,
     danger: `
       bg-gradient-to-r from-red-600 to-red-700 
       text-white 

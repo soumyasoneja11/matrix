@@ -12,6 +12,7 @@ import {
   Trash2,
 } from 'lucide-react';
 import { useAuth } from '../hooks/contexts/AuthContext';
+import { useTheme } from '../hooks/contexts/ThemeContext';
 import { Badge } from './ui/Badge';
 
 export type TabId =
@@ -50,6 +51,8 @@ interface TabBarProps {
 
 export function TabBar({ activeTab, onTabChange, queueCounts = { critical: 0, urgent: 0, standard: 0 } }: TabBarProps) {
   const { isSupervisor } = useAuth();
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
   const visibleTabs = tabs.filter((t) => !t.supervisorOnly || isSupervisor);
 
   // Hide on home page
@@ -89,7 +92,9 @@ export function TabBar({ activeTab, onTabChange, queueCounts = { critical: 0, ur
                 className={clsx(
                   'flex items-center gap-2.5 px-5 py-3 rounded-xl font-medium text-sm transition-all duration-200 whitespace-nowrap cursor-pointer shadow-sm',
                   isActive
-                    ? 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md shadow-primary-500/20'
+                    ? isLight
+                      ? 'bg-gradient-to-r from-[#247B7B] to-[#2a9d8f] text-white shadow-md shadow-[#247B7B]/20'
+                      : 'bg-gradient-to-r from-primary-600 to-primary-500 text-white shadow-md shadow-primary-500/20'
                     : 'bg-white/60 text-forest-600 hover:bg-white/90 hover:text-forest-800 hover:shadow-md border border-white/40'
                 )}
               >
