@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { InputField, SelectField } from '../components/ui/InputField';
 import { EmptyState } from '../components/ui/EmptyState';
 import { staffAPI } from '../services/api';
-import type { Staff, Role } from '../types/staff';
+import { Staff, Role } from '../types';
 
 const roleFilters: { value: string; label: string }[] = [
   { value: 'ALL', label: 'All' },
@@ -52,7 +52,7 @@ export function StaffDirectoryPage() {
   const doctorCount = staff.filter((s) => s.role === 'DOCTOR').length;
   const nurseCount = staff.filter((s) => s.role === 'NURSE').length;
 
-  const handleRemove = async (id: number) => {
+  const handleRemove = async (id: string) => {
     try {
       await staffAPI.remove(id);
       fetchStaff();
@@ -144,7 +144,7 @@ export function StaffDirectoryPage() {
               <Card hover className="relative">
                 {/* Status indicator */}
                 <div className="absolute top-4 right-4">
-                  <span className={`w-2.5 h-2.5 rounded-full inline-block ${member.status === 'ACTIVE' ? 'bg-green-500' : member.status === 'ON_CALL' ? 'bg-amber-500' : 'bg-gray-400'}`} />
+                  <span className={`w-2.5 h-2.5 rounded-full inline-block ${member.status === 'ACTIVE' ? 'bg-green-500' : member.status === 'online' ? 'bg-amber-500' : 'bg-gray-400'}`} />
                 </div>
 
                 <div className="flex items-start gap-3 mb-3">

@@ -1,14 +1,64 @@
-# Frontend
-frontend/node_modules/
-frontend/.env
-frontend/build/
+# --- OS Specific ---
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
 
-# Backend
-backend/target/
-backend/.env
-backend/src/main/resources/application-local.properties
-
-# IDE
+# --- IDEs / Editors ---
 .idea/
 .vscode/
 *.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+.project
+.classpath
+.settings/
+.factorypath
+.springBeans
+.sts4-cache
+.apt_generated
+
+# --- Node / Frontend ---
+**/node_modules/
+**/dist/
+**/build/
+**/coverage/
+**/.env
+**/.env.local
+**/.env.*.local
+**/.vite/
+**/.turbo/
+**/.next/
+**/.nuxt/
+**/.cache/
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# --- Java / Backend ---
+**/target/
+**/*.class
+**/*.jar
+**/*.war
+**/help.md
+**/*.ear
+**/.mvn/wrapper/maven-wrapper.jar
+**/Stacktrace.txt
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+# --- Local Artifacts & Temp ---
+*.log
+*.tmp
+*.bak
+frontend/*.txt
+frontend/tsc_errors*.txt
+frontend/tsc_out.txt
+tmp/
+.temp/

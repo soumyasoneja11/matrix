@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Stethoscope, UserPlus, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
 import { InputField, SelectField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
-import type { Role } from '../types/staff';
+import { Role } from '../types';
 
 interface SignUpPageProps {
   onSwitchToLogin: () => void;
@@ -37,6 +38,7 @@ const departmentOptions = [
 ];
 
 export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
+  const navigate = useNavigate();
   const { signup } = useAuth();
   const [form, setForm] = useState({
     fullName: '',
@@ -188,7 +190,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
             <p className="text-sm text-gray-500">
               Already have an account?{' '}
               <button
-                onClick={onSwitchToLogin}
+                onClick={() => { onSwitchToLogin ? onSwitchToLogin() : navigate('/'); }}
                 className="text-primary-600 font-semibold hover:text-primary-700 transition-colors cursor-pointer"
               >
                 Sign In

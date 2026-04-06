@@ -1,0 +1,36 @@
+spring:
+  application:
+    name: vitalpass-backend
+  
+  data:
+    mongodb:
+      uri: mongodb://localhost:27017/vitalpass
+      auto-index-creation: true
+  
+  jackson:
+    default-property-inclusion: non_null
+    serialization:
+      write_dates_as_timestamps: false
+
+server:
+  port: 8080
+  error:
+    include-message: always
+
+ai:
+  gemini:
+    key: YOUR_GEMINI_API_KEY_HERE
+    url: https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent
+  huggingface:
+    key: YOUR_HUGGINGFACE_API_KEY_HERE
+    url: https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2
+
+jwt:
+  secret: dGhpc0lzQVZlcnlMb25nU2VjcmV0S2V5Rm9yRGV2T25seURvTm90VXNlSW5Qcm9kdWN0aW9uMTIzNDU2
+  expiration: 86400000
+
+logging:
+  level:
+    root: INFO
+    com.mediscan: DEBUG
+    org.springframework.security: DEBUG

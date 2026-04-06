@@ -10,7 +10,7 @@ import java.util.Optional;
 public interface PatientRepository extends MongoRepository<Patient, String> {
     
     Optional<Patient> findByEmail(String email);
-    
     List<Patient> findByName(String name);
-    
+    List<Patient> findByIsDeletedFalse();
+    List<Patient> findByIsDeletedTrue();
 }

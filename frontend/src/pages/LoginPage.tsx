@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Stethoscope, Heart, Shield, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../contexts/AuthContext';
+import { Stethoscope, Heart, Shield, Eye, EyeOff, Play } from 'lucide-react';
+import { useAuth } from '../hooks/contexts/AuthContext';
 import { InputField } from '../components/ui/InputField';
 import { Button } from '../components/ui/Button';
 import hospitalBg from '../assets/images/hospital.png';
@@ -11,7 +12,8 @@ interface LoginPageProps {
 }
 
 export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
-  const { login } = useAuth();
+  const navigate = useNavigate();
+  const { login, demoLogin } = useAuth();
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -32,35 +34,33 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden">
-      {/* Background */}
-      <div className="absolute inset-0 bg-linear-to-br from-primary-50 via-primary-100/30 to-blue-50" />
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-cream">
+      {/* Background image */}
       <div
-        className="absolute inset-0 opacity-5"
+        className="absolute inset-0 opacity-[0.04]"
         style={{ backgroundImage: `url(${hospitalBg})`, backgroundSize: 'cover', backgroundPosition: 'center' }}
       />
 
-      {/* Decorative orbs */}
-      <div className="absolute top-20 left-20 w-72 h-72 bg-primary-300/20 rounded-full blur-3xl" />
-      <div className="absolute bottom-20 right-20 w-96 h-96 bg-primary-400/15 rounded-full blur-3xl" />
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-forest-50/60 via-cream to-primary-50/40" />
 
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
+        initial={{ opacity: 0, y: 24 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.6, ease: 'easeOut' }}
-        className="relative w-full max-w-md mx-4"
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+        className="relative w-full max-w-sm mx-4"
       >
-        <div className="glass rounded-3xl p-8 shadow-2xl">
+        <div className="bg-white rounded-2xl p-8 shadow-xl border border-forest-100/50">
           {/* Logo */}
           <div className="flex flex-col items-center mb-8">
-            <div className="w-16 h-16 rounded-2xl bg-linear-to-br from-primary-500 to-primary-700 flex items-center justify-center shadow-lg mb-4">
-              <Stethoscope size={28} className="text-white" />
+            <div className="w-14 h-14 rounded-2xl bg-forest-800 flex items-center justify-center mb-4">
+              <Stethoscope size={24} className="text-primary-400" />
             </div>
-            <h1 className="text-2xl font-bold text-primary-900 tracking-tight">ER Triage Sprint</h1>
-            <p className="text-sm text-gray-500 mt-1">AI-Powered Emergency Triage</p>
+            <h1 className="text-xl font-bold text-forest-900 tracking-tight">ER Triage Sprint</h1>
+            <p className="text-xs text-forest-400 mt-1">AI-Powered Emergency Triage</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <InputField
               label="Username"
               placeholder="Enter your username"
@@ -81,9 +81,9 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-3 top-9 text-gray-400 hover:text-gray-600 cursor-pointer"
+                className="absolute right-3 top-9 text-forest-300 hover:text-forest-600 cursor-pointer"
               >
-                {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
               </button>
             </div>
 
@@ -91,7 +91,7 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
               <motion.p
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
-                className="text-sm text-red-500 bg-red-50 rounded-xl px-4 py-2"
+                className="text-sm text-red-600 bg-red-50 rounded-xl px-4 py-2"
               >
                 {error}
               </motion.p>
@@ -104,30 +104,38 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
                   Signing in...
                 </span>
               ) : (
-                <>
-                  <Shield size={16} />
-                  Sign In
-                </>
+                'Sign In'
               )}
             </Button>
           </form>
 
-          <div className="mt-6 text-center">
-            <p className="text-sm text-gray-500">
+          {/* Demo Mode */}
+          <button
+            onClick={demoLogin}
+            className="mt-3 w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold cursor-pointer
+              bg-primary-50 text-primary-700 border border-primary-200
+              hover:bg-primary-100 hover:border-primary-300
+              active:scale-[0.98] transition-all duration-200"
+          >
+            <Play size={14} />
+            Enter Demo Mode
+          </button>
+
+          <div className="mt-5 text-center">
+            <p className="text-sm text-forest-400">
               Don't have an account?{' '}
               <button
-                onClick={onSwitchToSignUp}
-                className="text-primary-600 font-semibold hover:text-primary-700 transition-colors cursor-pointer"
+                onClick={() => { onSwitchToSignUp ? onSwitchToSignUp() : navigate('/signup'); }}
+                className="text-forest-800 font-semibold hover:text-forest-900 transition-colors cursor-pointer underline underline-offset-2"
               >
                 Sign Up
               </button>
             </p>
           </div>
 
-          {/* Footer features */}
-          <div className="mt-8 flex items-center justify-center gap-6 text-xs text-gray-400">
-            <span className="flex items-center gap-1"><Heart size={12} /> HIPAA Compliant</span>
-            <span className="flex items-center gap-1"><Shield size={12} /> Encrypted</span>
+          <div className="mt-6 flex items-center justify-center gap-5 text-[11px] text-forest-300">
+            <span className="flex items-center gap-1"><Heart size={11} /> HIPAA Compliant</span>
+            <span className="flex items-center gap-1"><Shield size={11} /> Encrypted</span>
           </div>
         </div>
       </motion.div>

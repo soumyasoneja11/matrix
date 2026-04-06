@@ -4,9 +4,9 @@ import { ClipboardList, ShieldAlert } from 'lucide-react';
 import { Card } from '../components/ui/Card';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
 import { worklistAPI } from '../services/api';
-import type { Patient } from '../types/patient';
+import { Patient } from '../types';
 
 export function MyWorklistPage() {
   const { user } = useAuth();

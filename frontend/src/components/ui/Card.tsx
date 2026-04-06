@@ -1,37 +1,55 @@
 import React from 'react';
-import clsx from 'clsx';
 
 interface CardProps {
   children: React.ReactNode;
   className?: string;
-  variant?: 'glass' | 'solid' | 'ghost';
+  padding?: 'none' | 'sm' | 'md' | 'lg' | 'xl';
+  variant?: 'default' | 'glass' | 'premium' | 'subtle';
   hover?: boolean;
-  padding?: 'sm' | 'md' | 'lg' | 'none';
+  onClick?: () => void;
 }
 
-export function Card({ children, className, variant = 'glass', hover = false, padding = 'md' }: CardProps) {
+export function Card({ 
+  children, 
+  className = '', 
+  padding = 'md',
+  variant = 'default',
+  hover = false,
+  onClick 
+}: CardProps) {
+  const paddingStyles = {
+    none: '',
+    sm: 'p-3',
+    md: 'p-4',
+    lg: 'p-6',
+    xl: 'p-8',
+  };
+
+  const variantStyles = {
+    default: 'bg-white border border-forest-100/40',
+    glass: 'glass',
+    premium: 'premium-card',
+    subtle: 'glass-subtle',
+  };
+
+  const hoverStyles = hover 
+    ? 'hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 cursor-pointer' 
+    : '';
+
   return (
     <div
-      className={clsx(
-        'rounded-3xl transition-all duration-300',
-        {
-          'glass': variant === 'glass',
-          'bg-white shadow-sm border border-gray-100': variant === 'solid',
-          'bg-transparent': variant === 'ghost',
-        },
-        {
-          'hover:shadow-xl hover:-translate-y-1': hover,
-        },
-        {
-          'p-3': padding === 'sm',
-          'p-6': padding === 'md',
-          'p-8': padding === 'lg',
-          '': padding === 'none',
-        },
-        className
-      )}
+      onClick={onClick}
+      className={`
+        rounded-2xl
+        ${variantStyles[variant]}
+        ${paddingStyles[padding]}
+        ${hoverStyles}
+        ${className}
+      `}
     >
       {children}
     </div>
   );
 }
+
+export default Card;
