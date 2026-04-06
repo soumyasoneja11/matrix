@@ -22,11 +22,7 @@ const PatientHistoryHeader: React.FC<PatientHistoryHeaderProps> = ({ patient, on
   const lastVisitDate = new Date(latestVisit?.date || Date.now());
   const departments = [...new Set(patient.visits.map(v => v.department).filter(Boolean))];
 
-  const qrData = JSON.stringify({
-    id: `#${patient.id}`,
-    name: patient.name,
-    type: 'patient-history',
-  });
+  const qrData = `${window.location.origin}/patient/${patient.id}`;
 
   const handleDownloadQR = useCallback(() => {
     const canvas = qrRef.current?.querySelector('canvas');

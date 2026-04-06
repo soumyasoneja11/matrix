@@ -1,19 +1,16 @@
 import { useState, useMemo } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaUsers, FaCalendarCheck, FaHeartbeat } from 'react-icons/fa';
-import { ArrowLeft } from 'lucide-react';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientHistoryCard from '../components/PatientHistory/PatientHistoryCard';
-import PatientHistoryHeader from '../components/PatientHistory/PatientHistoryHeader';
-import PatientTimeline from '../components/PatientHistory/PatientTimeline';
 import { PATIENT_HISTORY_DATA } from '../data/patientHistoryData';
-import { PatientHistoryRecord } from '../types';
 
 const PatientHistory = () => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedPatient, setSelectedPatient] = useState<PatientHistoryRecord | null>(null);
 
   // Filter patients by search
   const filteredPatients = useMemo(() => {
@@ -31,34 +28,6 @@ const PatientHistory = () => {
   const totalPatients = PATIENT_HISTORY_DATA.length;
   const totalVisits = PATIENT_HISTORY_DATA.reduce((sum, p) => sum + p.visits.length, 0);
   const activeCases = PATIENT_HISTORY_DATA.filter(p => p.visits.some(v => v.status === 'ongoing')).length;
-
-  // Detail view
-  if (selectedPatient) {
-    return (
-      <div className="space-y-6">
-        <PatientHistoryHeader
-          patient={selectedPatient}
-          onClose={() => setSelectedPatient(null)}
-        />
-        <div>
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.15 }}
-          >
-            <h3 className={`text-lg font-bold mb-4 flex items-center gap-2 ${isLight ? 'text-[#1a2e2e]' : 'text-white'}`}>
-              <FaCalendarCheck size={16} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
-              Visit History
-              <span className={`text-xs font-normal ml-1 ${isLight ? 'text-gray-400' : 'text-white/40'}`}>
-                ({selectedPatient.visits.length} records)
-              </span>
-            </h3>
-          </motion.div>
-          <PatientTimeline visits={selectedPatient.visits} />
-        </div>
-      </div>
-    );
-  }
 
   // List view
   return (
@@ -164,7 +133,7 @@ const PatientHistory = () => {
                 key={patient.id}
                 patient={patient}
                 index={idx}
-                onClick={() => setSelectedPatient(patient)}
+                onClick={() => navigate(`/patient/${patient.id}`)}
               />
             ))}
           </motion.div>

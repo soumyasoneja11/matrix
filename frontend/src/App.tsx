@@ -13,6 +13,7 @@ import Analytics from './pages/Analytics';
 import RecycleBin from './pages/RecycleBin';
 
 import PatientHistory from './pages/PatientHistory';
+import PatientProfilePage from './pages/PatientProfilePage';
 
 import ContactPage from './pages/ContactPage';
 import PrivacyPage from './pages/PrivacyPage';
@@ -64,6 +65,7 @@ function App() {
         <Route path="/staff-management" element={<MainLayout><StaffManagement /></MainLayout>} />
         <Route path="/my-worklist" element={<MainLayout><MyWorklist /></MainLayout>} />
         <Route path="/patient-history" element={<MainLayout><PatientHistory /></MainLayout>} />
+        <Route path="/patient/:id" element={<MainLayout><PatientProfilePage /></MainLayout>} />
         <Route path="/analytics" element={<MainLayout><Analytics /></MainLayout>} />
         <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
