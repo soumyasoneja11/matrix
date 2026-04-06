@@ -13,6 +13,7 @@ import com.mediscan.service.ai.TriageExtractor;
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -20,6 +21,7 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Validated
@@ -34,6 +36,7 @@ public class PatientService {
     private final ResourceAllocator resourceAllocator;
     private final SimpMessagingTemplate messagingTemplate;
 
+    @Autowired
     public PatientService(PatientRepository patientRepository,
                           PatientEventRepository eventRepository,
                           TriageExtractor triageExtractor,
@@ -47,6 +50,20 @@ public class PatientService {
         this.resourceAllocator = resourceAllocator;
         this.messagingTemplate = messagingTemplate;
     }
+    
+    public Patient registerPatient(RegistrationRequest request) {
+        Patient patient = new Patient();
+        patient.setName(request.getName());
+        patient.setEmail(request.getEmail());
+        patient.setPhoneNumber(request.getPhoneNumber());
+        patient.setAge(request.getAge());
+        patient.setGender(request.getGender());
+        patient.setRawSymptoms(request.getSymptoms());
+        patient.setCreatedAt(LocalDateTime.now());
+        patient.setUpdatedAt(LocalDateTime.now());
+        
+        return patientRepository.save(patient);
+    }
 
     @Transactional
     public Patient registerAndTriage(@NotNull RegistrationRequest request) {
@@ -59,12 +76,15 @@ public class PatientService {
         TriagePriority priority = rulesEngine.calculatePriority(extractionResult);
 
         // 3. Create Patient (Mapping from Request + AI Result)
+        Integer inferredAge = extractionResult != null ? extractionResult.getAge() : 0;
+        String inferredGender = extractionResult != null ? extractionResult.getGender() : "Not Specified";
+
         Patient patient = Patient.builder()
                 .name(request.getName() != null ? request.getName() : "Unknown")
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
-                .age(extractionResult != null ? extractionResult.getAge() : 0)
-                .gender(extractionResult != null ? extractionResult.getGender() : "Not Specified")
+            .age(request.getAge() != null ? request.getAge() : inferredAge)
+            .gender(request.getGender() != null && !request.getGender().isBlank() ? request.getGender() : inferredGender)
                 .rawSymptoms(request.getSymptoms())
                 .extractedSymptoms(extractionResult != null ? extractionResult.getSymptoms() : new java.util.ArrayList<>())
                 .chiefComplaint(extractionResult != null ? extractionResult.getChiefComplaint() : "No Chief Complaint")
@@ -96,6 +116,10 @@ public class PatientService {
 
     public List<Patient> getRecycleBin() {
         return patientRepository.findByIsDeletedTrue();
+    }
+    
+    public Optional<Patient> getPatientById(String id) {
+        return patientRepository.findById(id);
     }
 
     @Transactional

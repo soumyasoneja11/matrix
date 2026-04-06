@@ -53,18 +53,51 @@ public class DataInitializer implements CommandLineRunner {
             roomRepository.save(Room.builder().roomCode("OR-01").zoneId(orangeZone.getId()).equipment(List.of("Monitor", "Oxygen")).build());
             roomRepository.save(Room.builder().roomCode("YL-01").zoneId(yellowZone.getId()).equipment(List.of("Monitor")).build());
             roomRepository.save(Room.builder().roomCode("GN-01").zoneId(greenZone.getId()).build());
+        }
 
-            log.info("Seeding initial administrative user...");
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                userRepository.save(User.builder()
-                        .username("admin")
-                        .fullName("System Administrator")
-                        .email("admin@vitalpass.com")
-                        .password(passwordEncoder.encode("admin123"))
-                        .role(Role.ADMIN)
-                        .active(true)
-                        .build());
-            }
+        ensureAdminUser();
+    }
+
+    private void ensureAdminUser() {
+        log.info("Ensuring administrative user exists...");
+        var existing = userRepository.findByUsername("admin");
+        if (existing.isEmpty()) {
+            userRepository.save(User.builder()
+                    .username("admin")
+                    .fullName("System Administrator")
+                    .email("admin@vitalpass.com")
+                    .password(passwordEncoder.encode("admin123"))
+                    .role(Role.ADMIN)
+                    .active(true)
+                    .build());
+            return;
+        }
+
+        var admin = existing.get();
+        boolean updated = false;
+
+        if (!Boolean.TRUE.equals(admin.getActive())) {
+            admin.setActive(true);
+            updated = true;
+        }
+
+        if (!passwordEncoder.matches("admin123", admin.getPassword())) {
+            admin.setPassword(passwordEncoder.encode("admin123"));
+            updated = true;
+        }
+
+        if (admin.getRole() != Role.ADMIN) {
+            admin.setRole(Role.ADMIN);
+            updated = true;
+        }
+
+        if (admin.getEmail() == null || admin.getEmail().isBlank()) {
+            admin.setEmail("admin@vitalpass.com");
+            updated = true;
+        }
+
+        if (updated) {
+            userRepository.save(admin);
         }
     }
 }

@@ -48,8 +48,12 @@ export interface Patient {
   name: string;
   age?: number;
   gender?: string;
+  email?: string;
+  phoneNumber?: string;
   chiefComplaint?: string;
   description?: string;
+  rawSymptoms?: string;
+  extractedSymptoms?: string[];
   triageLevel: TriageLevel;
   priority?: 'RED' | 'ORANGE' | 'YELLOW' | 'GREEN' | 'BLUE'; // ← ADD THIS
   status?: string;
@@ -115,6 +119,8 @@ export interface TriageRequest {
   name?: string;
   email?: string;
   phoneNumber?: string;
+  age?: number;
+  gender?: string;
   symptoms?: string;
   patientDetails?: string;
   language?: string;

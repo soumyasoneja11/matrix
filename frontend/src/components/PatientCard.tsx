@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Patient, TriageLevel } from '../types';
 import { motion } from 'framer-motion';
-import { FaHeartbeat, FaThermometerHalf, FaTint, FaClock, FaUserMd, FaMapMarkerAlt, FaRedo } from 'react-icons/fa';
+import { FaHeartbeat, FaThermometerHalf, FaTint, FaClock, FaUserMd, FaMapMarkerAlt, FaRedo, FaPhoneAlt, FaEnvelope, FaUser } from 'react-icons/fa';
 import { Download, RefreshCw, QrCode } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { useTheme } from '../hooks/contexts/ThemeContext';
@@ -103,9 +103,60 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
           <div>
             <p className={labelClass}>Chief Complaint</p>
             <p className={`${valueClass} leading-relaxed mt-0.5`}>
-              {patient.description}
+              {patient.chiefComplaint || patient.description || patient.rawSymptoms || 'No complaint recorded'}
             </p>
           </div>
+
+          {/* Demographics */}
+          <div>
+            <p className={labelClass}>Demographics</p>
+            <div className="mt-0.5 flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <FaUser size={10} className={isLight ? 'text-gray-400' : 'text-white/40'} />
+                <span className={valueClass}>{patient.age ?? 'N/A'} yrs</span>
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className={valueClass}>{patient.gender || 'Not specified'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Contact */}
+          <div>
+            <p className={labelClass}>Contact</p>
+            <div className="mt-0.5 space-y-1">
+              <div className="flex items-center gap-2">
+                <FaPhoneAlt size={10} className={isLight ? 'text-emerald-500' : 'text-emerald-400/80'} />
+                <span className={valueClass}>{patient.phoneNumber || 'N/A'}</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <FaEnvelope size={10} className={isLight ? 'text-blue-500' : 'text-blue-400/80'} />
+                <span className={valueClass}>{patient.email || 'N/A'}</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Symptoms */}
+          {(patient.rawSymptoms || (patient.extractedSymptoms && patient.extractedSymptoms.length > 0)) && (
+            <div>
+              <p className={labelClass}>Symptoms</p>
+              {patient.rawSymptoms && (
+                <p className={`${valueClass} mt-0.5 leading-relaxed`}>{patient.rawSymptoms}</p>
+              )}
+              {patient.extractedSymptoms && patient.extractedSymptoms.length > 0 && (
+                <div className="mt-1 flex flex-wrap gap-1.5">
+                  {patient.extractedSymptoms.slice(0, 6).map((symptom) => (
+                    <span
+                      key={symptom}
+                      className={`text-[10px] px-2 py-0.5 rounded-full ${isLight ? 'bg-gray-100 text-gray-600' : 'bg-white/10 text-white/70'}`}
+                    >
+                      {symptom}
+                    </span>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Vitals */}
           {patient?.vitals && (
