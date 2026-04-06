@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { Patient, TriageLevel } from '../types';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { Patient, TriageLevel, Vitals } from '../types';
 import KanbanColumn from './KanbanColumn';
 import ConfirmationModal from './ConfirmationModal';
 import ToastNotification from './ToastNotification';

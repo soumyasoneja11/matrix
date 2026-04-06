@@ -1,8 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useDroppable } from '@dnd-kit/core';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
-import { Patient } from '../types';
+import { Patient, TriageLevel, Vitals } from '../types';
 import PatientCard from './PatientCard';
 
 interface KanbanColumnProps {
@@ -18,8 +18,13 @@ interface KanbanColumnProps {
   patients: Patient[];
   onPatientUpdate: () => void;
   idx: number; // for staggered animation
-  onDischarge?: (patient: Patient) => void;
-  onHandoff?: (patient: Patient, doctor: string, nurse: string) => void;
+  onReTriage?: (patientId: string, updatedData: {
+    description?: string;
+    vitals?: Vitals;
+    triageLevel: TriageLevel;
+  }) => void;
+  onDischarge?: (patient: Patient) => void | Promise<void>;
+  onHandoff?: (patient: Patient, doctor: string, nurse: string) => void | Promise<void>;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -35,6 +40,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   patients,
   onPatientUpdate,
   idx,
+  onReTriage,
   onDischarge,
   onHandoff,
 }) => {
@@ -85,7 +91,14 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           </div>
         ) : (
           patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} onUpdate={onPatientUpdate} onDischarge={onDischarge} onHandoff={onHandoff} />
+            <PatientCard
+              key={patient.id}
+              patient={patient}
+              onUpdate={onPatientUpdate}
+              onReTriage={onReTriage}
+              onDischarge={onDischarge}
+              onHandoff={onHandoff}
+            />
           ))
         )}
       </div>

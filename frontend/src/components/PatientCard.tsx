@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Patient, TriageLevel } from '../types';
+import { Patient, TriageLevel, Vitals } from '../types';
 import { motion } from 'framer-motion';
 import { FaHeartbeat, FaThermometerHalf, FaTint, FaClock, FaUserMd, FaMapMarkerAlt, FaRedo } from 'react-icons/fa';
 import { Download, RefreshCw, QrCode } from 'lucide-react';
@@ -16,9 +16,14 @@ interface PatientCardProps {
   isOverlay?: boolean;
   onDischarge?: (patient: Patient) => void;
   onHandoff?: (patient: Patient, doctor: string, nurse: string) => void;
+  onReTriage?: (patientId: string, updatedData: {
+    description?: string;
+    vitals?: Vitals;
+    triageLevel: TriageLevel;
+  }) => void;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false, onDischarge, onHandoff }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false, onDischarge, onHandoff, onReTriage }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
