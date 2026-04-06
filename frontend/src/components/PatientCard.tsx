@@ -11,9 +11,10 @@ import QRModal from './QRCode/QRDisplay';
 interface PatientCardProps {
   patient: Patient;
   onUpdate: () => void;
+  isOverlay?: boolean;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -52,7 +53,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
         initial={{ opacity: 0, scale: 0.97 }}
         animate={{ opacity: 1, scale: 1 }}
         whileHover={{ y: -2 }}
-        onClick={() => setIsModalOpen(true)}
+        onClick={() => !isOverlay && setIsModalOpen(true)}
         className={`
           rounded-xl border-l-[3px] cursor-pointer flex flex-col
           transition-all duration-200

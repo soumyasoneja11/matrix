@@ -17,8 +17,10 @@ const LayoutInner: React.FC<MainLayoutProps> = ({ children }) => {
     <div className="flex h-screen overflow-hidden">
       {!isCollapsed && <Sidebar />}
       <div className="flex-1 flex flex-col overflow-hidden">
-        <Header />
-        {isCollapsed && <Navbar />}
+        <div className="shrink-0 relative" style={{ zIndex: 50, overflow: 'visible' }}>
+          <Header />
+          {isCollapsed && <Navbar />}
+        </div>
         <main id="main-scroll-container" className="flex-1 overflow-y-auto p-6 relative">
           <div className="animate-fade-in">
             {children}

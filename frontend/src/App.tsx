@@ -10,6 +10,9 @@ import StaffManagement from './pages/StaffManagement';
 import MyWorklist from './pages/MyWorklist';
 import Analytics from './pages/Analytics';
 import RecycleBin from './pages/RecycleBin';
+import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
 import { LoginPage } from './pages/LoginPage';
 import { SignUpPage } from './pages/SignUpPage';
 
@@ -57,6 +60,9 @@ function App() {
       <Route path="/my-worklist" element={<MainLayout><MyWorklist /></MainLayout>} />
       <Route path="/analytics" element={<MainLayout><Analytics /></MainLayout>} />
       <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
+      <Route path="/contact" element={<MainLayout><ContactPage /></MainLayout>} />
+      <Route path="/privacy" element={<MainLayout><PrivacyPage /></MainLayout>} />
+      <Route path="/terms" element={<MainLayout><TermsPage /></MainLayout>} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

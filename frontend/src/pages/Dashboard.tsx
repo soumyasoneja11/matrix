@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
-import { fetchPatients } from '../services/api';
+import { fetchPatients, patientAPI } from '../services/api';
 import { Patient, TriageLevel } from '../types';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
@@ -50,28 +50,64 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+  const [isDragging, setIsDragging] = useState(false);
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     try {
       const data = await fetchPatients();
       setPatients(data.length > 0 ? data : DEMO_PATIENTS);
       setLastUpdate(new Date());
     } catch (error) {
       console.error('Failed to load patients:', error);
-      // Keep demo patients on error
       if (patients.length === 0) setPatients(DEMO_PATIENTS);
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // Auto-refresh: pause while dragging
   useEffect(() => {
     loadPatients();
-    const interval = setInterval(loadPatients, 4000);
-    return () => clearInterval(interval);
   }, []);
+
+  useEffect(() => {
+    if (isDragging) {
+      // Clear interval during drag to prevent board resets
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
+    } else {
+      // Resume auto-refresh when not dragging
+      intervalRef.current = setInterval(loadPatients, 4000);
+    }
+    return () => {
+      if (intervalRef.current) clearInterval(intervalRef.current);
+    };
+  }, [isDragging, loadPatients]);
+
+  const handleTriageLevelChange = useCallback(async (patientId: string, newLevel: TriageLevel) => {
+    const oldPatient = patients.find(p => p.id === patientId);
+    if (!oldPatient || oldPatient.triageLevel === newLevel) return;
+
+    // Optimistic update
+    setPatients(prev => prev.map(p =>
+      p.id === patientId ? { ...p, triageLevel: newLevel } : p
+    ));
+
+    try {
+      await patientAPI.updateTriageLevel(patientId, newLevel);
+    } catch (err) {
+      console.error('Failed to update triage level:', err);
+      // Revert on failure
+      setPatients(prev => prev.map(p =>
+        p.id === patientId ? { ...p, triageLevel: oldPatient.triageLevel } : p
+      ));
+    }
+  }, [patients]);
 
   return (
     <div className="space-y-6">
@@ -84,7 +120,7 @@ const Dashboard = () => {
           {error ? (
             <div className="glass-card p-12 text-center border-red-500/20">
               <div className="w-12 h-12 bg-red-500/20 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaChartLine className="text-red-400" />
+                <span className="text-red-400 text-xl">⚠</span>
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Sync Error</h3>
               <p className="text-white/60 mb-6">{error}</p>
@@ -101,7 +137,13 @@ const Dashboard = () => {
               <p className="theme-text-muted">Loading triage dashboard...</p>
             </div>
           ) : (
-            <TriageBoard patients={patients} onPatientUpdate={loadPatients} />
+            <TriageBoard
+              patients={patients}
+              onPatientUpdate={loadPatients}
+              onTriageLevelChange={handleTriageLevelChange}
+              isDragging={isDragging}
+              setIsDragging={setIsDragging}
+            />
           )}
         </div>
       </div>
