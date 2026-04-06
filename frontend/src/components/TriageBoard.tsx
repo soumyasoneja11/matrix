@@ -12,8 +12,10 @@ import {
   useSensor, useSensors, PointerSensor, TouchSensor,
   DragOverlay, closestCorners
 } from '@dnd-kit/core';
-import { patientAPI } from '../services/api';
+import { patientAPI, updatePatient } from '../services/api';
 import { useNotifications } from '../hooks/contexts/NotificationContext';
+import { useRecycleBin } from '../hooks/contexts/RecycleBinContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
 
 interface TriageBoardProps{
   patients: Patient[];
@@ -25,6 +27,8 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const { addNotification } = useNotifications();
+  const { dischargePatient, isDischarging } = useRecycleBin();
+  const { user } = useAuth();
 
   // committedPatientsRef holds our optimistic update.
   // It is ONLY released (set back to null) when the incoming `patients` prop
@@ -161,6 +165,84 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
     setPauseRefresh(false);
   };
 
+  // ── Discharge handler ──
+  const handleDischarge = async (patient: Patient) => {
+    if (isDischarging) return;
+
+    const currentUser = user?.fullName || 'System';
+    const patientName = patient.name || 'Patient';
+
+    // 1. Add to recycle bin context
+    dischargePatient(patient, currentUser);
+
+    // 2. Optimistically remove from board
+    setPauseRefresh(true);
+    const base = committedPatientsRef.current ?? patients;
+    committedPatientsRef.current = base.filter(p => p.id !== patient.id);
+    forceRender();
+
+    // 3. Notify both channels
+    const msg = `Patient ${patientName} discharged by ${currentUser}`;
+    setToast({ id: Date.now().toString(), message: msg, type: 'success' });
+    addNotification(msg, 'info');
+
+    // 4. Call API
+    try {
+      await patientAPI.dismiss(patient.id);
+    } catch (err) {
+      console.error('Failed to discharge patient on backend:', err);
+      // The patient is already in recycle bin locally, so we don't revert that
+      // But we do show an error
+      const errMsg = `Discharge saved locally. Backend sync may be pending.`;
+      setToast({ id: Date.now().toString(), message: errMsg, type: 'error' });
+      addNotification(errMsg, 'error');
+    }
+
+    // 5. Release ref and refresh
+    committedPatientsRef.current = null;
+    setPauseRefresh(false);
+    onPatientUpdate();
+  };
+
+  // ── Handoff handler ──
+  const handleHandoff = async (patient: Patient, doctor: string, nurse: string) => {
+    const patientName = patient.name || 'Patient';
+
+    // 1. Optimistically update the board
+    setPauseRefresh(true);
+    const base = committedPatientsRef.current ?? patients;
+    committedPatientsRef.current = base.map(p =>
+      p.id === patient.id
+        ? { ...p, assignedDoctor: doctor, assignedNurse: nurse, assignedStaff: doctor }
+        : p
+    );
+    forceRender();
+
+    // 2. Notify both channels
+    const msg = `Patient ${patientName} handed off to ${doctor} and ${nurse}`;
+    setToast({ id: Date.now().toString(), message: msg, type: 'success' });
+    addNotification(msg, 'info');
+
+    // 3. Call API
+    try {
+      await updatePatient(patient.id, {
+        assignedDoctor: doctor,
+        assignedNurse: nurse,
+        assignedStaff: doctor,
+      });
+    } catch (err) {
+      console.error('Failed to update handoff on backend:', err);
+      const errMsg = `Handoff saved locally. Backend sync may be pending.`;
+      setToast({ id: Date.now().toString(), message: errMsg, type: 'error' });
+      addNotification(errMsg, 'error');
+    }
+
+    // 4. Release ref and refresh
+    committedPatientsRef.current = null;
+    setPauseRefresh(false);
+    onPatientUpdate();
+  };
+
   const criticalPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.CRITICAL);
   const urgentPatients   = displayPatients.filter(p => p.triageLevel === TriageLevel.URGENT);
   const standardPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.STANDARD);
@@ -231,6 +313,8 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
               {...col}
               onPatientUpdate={onPatientUpdate}
               idx={idx}
+              onDischarge={handleDischarge}
+              onHandoff={handleHandoff}
             />
           ))}
         </div>

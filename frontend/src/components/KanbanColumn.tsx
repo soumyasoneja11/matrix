@@ -18,6 +18,8 @@ interface KanbanColumnProps {
   patients: Patient[];
   onPatientUpdate: () => void;
   idx: number; // for staggered animation
+  onDischarge?: (patient: Patient) => void;
+  onHandoff?: (patient: Patient, doctor: string, nurse: string) => void;
 }
 
 const KanbanColumn: React.FC<KanbanColumnProps> = ({
@@ -33,6 +35,8 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
   patients,
   onPatientUpdate,
   idx,
+  onDischarge,
+  onHandoff,
 }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
@@ -81,7 +85,7 @@ const KanbanColumn: React.FC<KanbanColumnProps> = ({
           </div>
         ) : (
           patients.map((patient) => (
-            <PatientCard key={patient.id} patient={patient} onUpdate={onPatientUpdate} />
+            <PatientCard key={patient.id} patient={patient} onUpdate={onPatientUpdate} onDischarge={onDischarge} onHandoff={onHandoff} />
           ))
         )}
       </div>

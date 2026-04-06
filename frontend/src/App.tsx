@@ -2,6 +2,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from './hooks/contexts/AuthContext';
 import { useTheme } from './hooks/contexts/ThemeContext';
 import { NotificationProvider } from './hooks/contexts/NotificationContext';
+import { RecycleBinProvider } from './hooks/contexts/RecycleBinContext';
 import MainLayout from './layouts/MainLayout';
 import HomePage from './pages/HomePage';
 import Dashboard from './pages/Dashboard';
@@ -55,6 +56,7 @@ function App() {
   return (
 
     <NotificationProvider>
+    <RecycleBinProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/home" element={<HomePage />} />
@@ -70,6 +72,7 @@ function App() {
         <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
+    </RecycleBinProvider>
     </NotificationProvider>
 
   );

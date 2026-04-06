@@ -14,9 +14,11 @@ interface PatientCardProps {
   patient: Patient;
   onUpdate: () => void;
   isOverlay?: boolean;
+  onDischarge?: (patient: Patient) => void;
+  onHandoff?: (patient: Patient, doctor: string, nurse: string) => void;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false, onDischarge, onHandoff }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -209,6 +211,8 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay 
         patient={patient}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+        onDischarge={onDischarge}
+        onHandoff={onHandoff}
       />
 
       <QRModal
