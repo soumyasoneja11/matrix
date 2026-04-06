@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Patient, TriageLevel, Vitals } from '../types';
+import { Patient, TriageLevel, Vitals } from '../types'; 
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaHeartbeat, FaThermometerHalf, FaTint, FaClock, FaUserMd, FaMapMarkerAlt, FaRedo, FaChevronDown } from 'react-icons/fa';
 import { Download, RefreshCw, QrCode } from 'lucide-react';

@@ -2,18 +2,21 @@ import { useState } from 'react';
 import VoiceCaptureButton from './VoiceCaptureButton';
 import { createPatient } from '../services/api';
 import { getTriageResult } from '../api/triage'; // 🔥 ADDED
+import { Patient } from '../types';
 import { motion } from 'framer-motion';
 import { FaLanguage, FaMagic, FaClock, FaChartLine, FaMicrophone } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface PatientTriageFormProps {
-  onPatientAdded: () => void;
+  onPatientAdded: (patient?: Patient) => void;
 }
 
 const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [age, setAge] = useState('');
+  const [gender, setGender] = useState('');
   const [description, setDescription] = useState('');
   const [language, setLanguage] = useState('en-US');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -27,8 +30,8 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
   };
 
   const handleSubmit = async () => {
-    if (!description.trim() || !name.trim()) {
-      setError('Name and Symptoms are required for triage.');
+    if (!description.trim() || !name.trim() || !phoneNumber.trim()) {
+      setError('Name, phone number, and symptoms are required for triage.');
       return;
     }
     
@@ -43,11 +46,13 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
       console.log("AI RESULT:", aiCategory);
 
       // 🔥 STEP 2 — SEND AI RESULT TO BACKEND
-      await createPatient({ 
+      const createdPatient = await createPatient({ 
         name, 
         email, 
         phoneNumber, 
-        symptoms: description
+        age: age ? Number(age) : undefined,
+        gender: gender || undefined,
+        symptoms: description 
       });
 
       // RESET (UNCHANGED)
@@ -55,8 +60,10 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
       setName('');
       setEmail('');
       setPhoneNumber('');
+      setAge('');
+      setGender('');
       setSuccess(true);
-      onPatientAdded();
+      onPatientAdded(createdPatient);
       setTimeout(() => setSuccess(false), 3000);
 
     } catch (err: any) {
@@ -126,10 +133,44 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="+1 (555) 000-0000"
+              required
               className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
                 isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
               }`}
             />
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="text-sm font-medium mb-1 block theme-text">Age</label>
+            <input
+              type="number"
+              min={0}
+              max={150}
+              value={age}
+              onChange={(e) => setAge(e.target.value)}
+              placeholder="Age"
+              className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
+              }`}
+            />
+          </div>
+          <div>
+            <label className="text-sm font-medium mb-1 block theme-text">Gender</label>
+            <select
+              value={gender}
+              onChange={(e) => setGender(e.target.value)}
+              className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
+                isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
+              }`}
+            >
+              <option value="">Select</option>
+              <option value="Female">Female</option>
+              <option value="Male">Male</option>
+              <option value="Non-binary">Non-binary</option>
+              <option value="Prefer not to say">Prefer not to say</option>
+            </select>
           </div>
         </div>
 
@@ -177,7 +218,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || !description.trim()}
+          disabled={isSubmitting || !description.trim() || !name.trim() || !phoneNumber.trim()}
           className="btn-primary w-full"
         >
           {isSubmitting ? 'Processing...' : 'Start Triage →'}

@@ -10,18 +10,21 @@ import com.mediscan.repository.PatientRepository;
 import com.mediscan.repository.PatientEventRepository;
 import com.mediscan.exception.ResourceNotFoundException;
 import com.mediscan.service.ai.TriageExtractor;
-import com.mediscan.service.triage.TextTriageService; // 🔥 ADDED
+import com.mediscan.service.triage.TextTriageService;
 
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @Validated
@@ -34,10 +37,9 @@ public class PatientService {
     private final TriageExtractor triageExtractor;
     private final ResourceAllocator resourceAllocator;
     private final SimpMessagingTemplate messagingTemplate;
+    private final TextTriageService textTriageService; // 🔥 FIXED
 
-    // 🔥 AI MODEL SERVICE
-    private final TextTriageService textTriageService;
-
+    @Autowired
     public PatientService(PatientRepository patientRepository,
                           PatientEventRepository eventRepository,
                           TriageExtractor triageExtractor,
@@ -50,22 +52,37 @@ public class PatientService {
         this.triageExtractor = triageExtractor;
         this.resourceAllocator = resourceAllocator;
         this.messagingTemplate = messagingTemplate;
-        this.textTriageService = textTriageService;
+        this.textTriageService = textTriageService; // 🔥 IMPORTANT FIX
     }
 
+    // 🔵 BASIC REGISTER (NO AI)
+    public Patient registerPatient(RegistrationRequest request) {
+        Patient patient = new Patient();
+        patient.setName(request.getName());
+        patient.setEmail(request.getEmail());
+        patient.setPhoneNumber(request.getPhoneNumber());
+        patient.setAge(request.getAge());
+        patient.setGender(request.getGender());
+        patient.setRawSymptoms(request.getSymptoms());
+        patient.setCreatedAt(LocalDateTime.now());
+        patient.setUpdatedAt(LocalDateTime.now());
+
+        return patientRepository.save(patient);
+    }
+
+    // 🔥 MAIN AI TRIAGE METHOD
     @Transactional
     public Patient registerAndTriage(@NotNull RegistrationRequest request) {
         log.info("Starting intake for patient: {}", request.getName());
 
-        // 1. AI Extraction (optional, keep for vitals etc.)
+        // 1. Extract structured data
         ExtractionResult extractionResult = triageExtractor.extract(request.getSymptoms());
 
-        // 🔥 2. ML MODEL PREDICTION (MAIN FIX)
+        // 2. AI MODEL PREDICTION
         String aiResult = textTriageService.predict(request.getSymptoms());
-
         log.info("AI TRIAGE RESULT: {}", aiResult);
 
-        // 🔥 3. MAP TO ENUM
+        // 3. MAP AI → ENUM
         TriagePriority priority = switch (aiResult) {
             case "CRITICAL" -> TriagePriority.RED;
             case "URGENT" -> TriagePriority.YELLOW;
@@ -77,16 +94,29 @@ public class PatientService {
                 .name(request.getName() != null ? request.getName() : "Unknown")
                 .email(request.getEmail())
                 .phoneNumber(request.getPhoneNumber())
-                .age(extractionResult != null ? extractionResult.getAge() : 0)
-                .gender(extractionResult != null ? extractionResult.getGender() : "Not Specified")
+
+                // 🔥 FIXED (NO inferred variables)
+                .age(request.getAge() != null ? request.getAge() :
+                        (extractionResult != null ? extractionResult.getAge() : 0))
+
+                .gender(request.getGender() != null && !request.getGender().isBlank()
+                        ? request.getGender()
+                        : (extractionResult != null ? extractionResult.getGender() : "Unknown"))
+
                 .rawSymptoms(request.getSymptoms())
-                .extractedSymptoms(extractionResult != null ? extractionResult.getSymptoms() : new java.util.ArrayList<>())
-                .chiefComplaint(extractionResult != null ? extractionResult.getChiefComplaint() : "No Chief Complaint")
-                .vitals(extractionResult != null ? extractionResult.getVitals() : new Patient.Vitals())
+                .extractedSymptoms(extractionResult != null
+                        ? extractionResult.getSymptoms()
+                        : new java.util.ArrayList<>())
 
-                // 🔥 THIS IS THE FINAL FIX
-                .priority(priority)
+                .chiefComplaint(extractionResult != null
+                        ? extractionResult.getChiefComplaint()
+                        : "No Chief Complaint")
 
+                .vitals(extractionResult != null
+                        ? extractionResult.getVitals()
+                        : new Patient.Vitals())
+
+                .priority(priority) // 🔥 AI PRIORITY
                 .status(PatientStatus.TRIAGED)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -99,7 +129,8 @@ public class PatientService {
         savedPatient = patientRepository.save(savedPatient);
 
         // 6. AUDIT LOG
-        logEvent(savedPatient, "INTAKE",
+        logEvent(savedPatient,
+                "INTAKE",
                 "New patient intake and AI triage completed",
                 null,
                 PatientStatus.TRIAGED,
@@ -112,14 +143,20 @@ public class PatientService {
         return savedPatient;
     }
 
+    // 🔵 FETCH
     public List<Patient> getActivePatients() {
-        return patientRepository.findByIsDeletedFalse();
+        return sortByClinicalPriorityThenRecent(patientRepository.findByIsDeletedFalse());
     }
 
     public List<Patient> getRecycleBin() {
-        return patientRepository.findByIsDeletedTrue();
+        return sortByClinicalPriorityThenRecent(patientRepository.findByIsDeletedTrue());
     }
 
+    public Optional<Patient> getPatientById(String id) {
+        return patientRepository.findById(id);
+    }
+
+    // 🔴 DELETE
     @Transactional
     public void softDelete(@NotNull String id) {
         Patient patient = patientRepository.findById(id)
@@ -128,7 +165,8 @@ public class PatientService {
         patient.setIsDeleted(true);
         patientRepository.save(patient);
 
-        logEvent(patient, "DISMISS",
+        logEvent(patient,
+                "DISMISS",
                 "Patient moved to recycle bin",
                 null,
                 null,
@@ -138,6 +176,7 @@ public class PatientService {
         broadcastUpdate(patient);
     }
 
+    // 🧾 EVENTS
     private void logEvent(Patient patient,
                           String type,
                           String desc,
@@ -159,7 +198,30 @@ public class PatientService {
         eventRepository.save(event);
     }
 
+    // 📡 REAL-TIME
     private void broadcastUpdate(Patient patient) {
         messagingTemplate.convertAndSend("/topic/patients", patient);
+    }
+
+    // 🔥 SORTING
+    private List<Patient> sortByClinicalPriorityThenRecent(List<Patient> patients) {
+        Comparator<Patient> comparator = Comparator
+                .comparingInt((Patient p) -> priorityRank(p.getPriority()))
+                .thenComparing(Patient::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Patient::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+
+        return patients.stream().sorted(comparator).toList();
+    }
+
+    private int priorityRank(TriagePriority priority) {
+        if (priority == null) return Integer.MAX_VALUE;
+
+        return switch (priority) {
+            case RED -> 0;
+            case ORANGE -> 1;
+            case YELLOW -> 2;
+            case GREEN -> 3;
+            case BLUE -> 4;
+        };
     }
 }

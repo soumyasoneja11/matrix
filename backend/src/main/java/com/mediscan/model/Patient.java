@@ -19,7 +19,7 @@ import java.util.ArrayList;
  */
 @Document(collection = "patients")
 public class Patient {
-    
+
     @Id
     private String id;
     
