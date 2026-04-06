@@ -243,6 +243,67 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
     onPatientUpdate();
   };
 
+  // ── Re-triage handler ──
+  const handleReTriage = async (patientId: string, updatedData: {
+    description?: string;
+    vitals?: Vitals;
+    triageLevel: TriageLevel;
+  }) => {
+    const base = committedPatientsRef.current ?? patients;
+    const targetPatient = base.find(p => p.id === patientId);
+    if (!targetPatient) return;
+
+    const patientName = targetPatient.name || 'Patient';
+    const oldLevel = targetPatient.triageLevel;
+    const newLevel = updatedData.triageLevel;
+
+    // 1. Build updated patient
+    const updatedPatient: Patient = {
+      ...targetPatient,
+      description: updatedData.description ?? targetPatient.description,
+      vitals: updatedData.vitals ?? targetPatient.vitals,
+      triageLevel: newLevel,
+    };
+
+    // 2. Optimistic update
+    setPauseRefresh(true);
+    committedPatientsRef.current = base.map(p =>
+      p.id === patientId ? updatedPatient : p
+    );
+    forceRender();
+
+    // 3. Notify
+    const levelChanged = oldLevel !== newLevel;
+    const msg = levelChanged
+      ? `${patientName} re-triaged: ${oldLevel} → ${newLevel}`
+      : `${patientName} vitals updated (priority unchanged)`;
+    setToast({ id: Date.now().toString(), message: msg, type: 'success' });
+    addNotification(msg, levelChanged ? 'info' : 'info');
+
+    // 4. Persist to backend
+    try {
+      await updatePatient(patientId, {
+        description: updatedData.description,
+        vitals: updatedData.vitals,
+        triageLevel: newLevel,
+      } as any);
+
+      if (levelChanged) {
+        await patientAPI.updateTriageLevel(patientId, newLevel);
+      }
+    } catch (err) {
+      console.error('Failed to persist re-triage:', err);
+      const errMsg = `Re-triage saved locally. Backend sync may be pending.`;
+      setToast({ id: Date.now().toString(), message: errMsg, type: 'error' });
+      addNotification(errMsg, 'error');
+    }
+
+    // 5. Release and refresh
+    committedPatientsRef.current = null;
+    setPauseRefresh(false);
+    onPatientUpdate();
+  };
+
   const criticalPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.CRITICAL);
   const urgentPatients   = displayPatients.filter(p => p.triageLevel === TriageLevel.URGENT);
   const standardPatients = displayPatients.filter(p => p.triageLevel === TriageLevel.STANDARD);
@@ -315,6 +376,7 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
               idx={idx}
               onDischarge={handleDischarge}
               onHandoff={handleHandoff}
+              onReTriage={handleReTriage}
             />
           ))}
         </div>
