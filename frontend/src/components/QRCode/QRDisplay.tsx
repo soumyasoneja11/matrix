@@ -1,8 +1,8 @@
-import React, { useRef, useCallback } from 'react';
+import React, { useRef, useCallback, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { QRCodeCanvas } from 'qrcode.react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Download } from 'lucide-react';
+import { X, Download, Copy, Check } from 'lucide-react';
 import { useTheme } from '../../hooks/contexts/ThemeContext';
 
 interface QRModalProps {
@@ -17,12 +17,9 @@ const QRModal: React.FC<QRModalProps> = ({ isOpen, onClose, patientId, patientNa
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const canvasRef = useRef<HTMLDivElement>(null);
+  const [copied, setCopied] = useState(false);
 
-  const qrData = JSON.stringify({
-    id: `#${patientId}`,
-    name: patientName,
-    location: patientLocation || 'Unassigned',
-  });
+  const profileUrl = `${window.location.origin}/patient/${patientId}`;
 
   const handleDownload = useCallback(() => {
     const canvas = canvasRef.current?.querySelector('canvas');
@@ -33,6 +30,13 @@ const QRModal: React.FC<QRModalProps> = ({ isOpen, onClose, patientId, patientNa
     link.href = canvas.toDataURL('image/png');
     link.click();
   }, [patientId]);
+
+  const handleCopyLink = useCallback(() => {
+    navigator.clipboard.writeText(profileUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  }, [profileUrl]);
 
   return createPortal(
     <AnimatePresence>
@@ -93,7 +97,7 @@ const QRModal: React.FC<QRModalProps> = ({ isOpen, onClose, patientId, patientNa
                 className={`p-4 rounded-xl ${isLight ? 'bg-white border border-gray-100' : 'bg-white rounded-xl'}`}
               >
                 <QRCodeCanvas
-                  value={qrData}
+                  value={profileUrl}
                   size={180}
                   bgColor="#ffffff"
                   fgColor="#1a2e2e"
@@ -102,18 +106,38 @@ const QRModal: React.FC<QRModalProps> = ({ isOpen, onClose, patientId, patientNa
                 />
               </div>
 
-              {/* Download button */}
-              <button
-                onClick={handleDownload}
-                className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-sm font-semibold transition-all ${
-                  isLight
-                    ? 'bg-[#247B7B] text-white hover:bg-[#1e6868] shadow-sm'
-                    : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg'
-                }`}
-              >
-                <Download size={14} />
-                Download PNG
-              </button>
+              {/* Action buttons */}
+              <div className="flex items-center gap-3 w-full">
+                <button
+                  onClick={handleDownload}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isLight
+                      ? 'bg-[#247B7B] text-white hover:bg-[#1e6868] shadow-sm'
+                      : 'bg-primary-600 text-white hover:bg-primary-700 shadow-lg'
+                  }`}
+                >
+                  <Download size={14} />
+                  Download
+                </button>
+                <button
+                  onClick={handleCopyLink}
+                  className={`flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl text-sm font-semibold transition-all ${
+                    isLight
+                      ? 'bg-gray-50 text-gray-700 hover:bg-gray-100 border border-gray-200'
+                      : 'bg-white/5 text-white/80 hover:bg-white/10 border border-white/10'
+                  }`}
+                >
+                  {copied ? <Check size={14} className="text-emerald-500" /> : <Copy size={14} />}
+                  {copied ? 'Copied!' : 'Copy Link'}
+                </button>
+              </div>
+
+              {/* URL preview */}
+              <div className={`w-full px-3 py-2 rounded-lg text-[10px] font-mono truncate text-center ${
+                isLight ? 'bg-gray-50 text-gray-400' : 'bg-white/5 text-white/30'
+              }`}>
+                {profileUrl}
+              </div>
             </div>
           </motion.div>
         </div>

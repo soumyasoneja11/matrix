@@ -307,3 +307,46 @@
     box-shadow: 0 0 0 20px rgba(36, 123, 123, 0);
   }
 }
+
+/* ── Drag & Drop ── */
+.droppable-column {
+  transition: box-shadow 0.25s ease, border-color 0.25s ease, background-color 0.25s ease;
+}
+
+.droppable-over {
+  box-shadow: inset 0 0 0 2px rgba(99, 102, 241, 0.5), 0 0 24px rgba(99, 102, 241, 0.15);
+  border-color: rgba(99, 102, 241, 0.4) !important;
+  background-color: rgba(99, 102, 241, 0.05);
+}
+[data-theme="light"] .droppable-over {
+  box-shadow: inset 0 0 0 2px rgba(36, 123, 123, 0.4), 0 0 20px rgba(36, 123, 123, 0.08);
+  border-color: rgba(36, 123, 123, 0.35) !important;
+  background-color: rgba(36, 123, 123, 0.04);
+}
+
+.dragging-source {
+  opacity: 0.35;
+  transform: scale(0.97);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.drag-overlay-card {
+  transform: rotate(2deg) scale(1.04);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35), 0 0 20px rgba(99, 102, 241, 0.2);
+  border: 1px solid rgba(99, 102, 241, 0.3);
+  z-index: 9999;
+  cursor: grabbing;
+}
+[data-theme="light"] .drag-overlay-card {
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15), 0 0 16px rgba(36, 123, 123, 0.1);
+  border: 1px solid rgba(36, 123, 123, 0.25);
+}
+
+.drop-indicator {
+  animation: dropPulse 1.2s ease-in-out infinite;
+}
+
+@keyframes dropPulse {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
