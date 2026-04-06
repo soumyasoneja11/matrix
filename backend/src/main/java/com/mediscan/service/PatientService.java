@@ -10,6 +10,8 @@ import com.mediscan.repository.PatientRepository;
 import com.mediscan.repository.PatientEventRepository;
 import com.mediscan.exception.ResourceNotFoundException;
 import com.mediscan.service.ai.TriageExtractor;
+import com.mediscan.service.triage.TextTriageService; // 🔥 ADDED
+
 import jakarta.validation.constraints.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,35 +32,47 @@ public class PatientService {
     private final PatientRepository patientRepository;
     private final PatientEventRepository eventRepository;
     private final TriageExtractor triageExtractor;
-    private final TriageRulesEngine rulesEngine;
     private final ResourceAllocator resourceAllocator;
     private final SimpMessagingTemplate messagingTemplate;
+
+    // 🔥 AI MODEL SERVICE
+    private final TextTriageService textTriageService;
 
     public PatientService(PatientRepository patientRepository,
                           PatientEventRepository eventRepository,
                           TriageExtractor triageExtractor,
-                          TriageRulesEngine rulesEngine,
                           ResourceAllocator resourceAllocator,
-                          SimpMessagingTemplate messagingTemplate) {
+                          SimpMessagingTemplate messagingTemplate,
+                          TextTriageService textTriageService) {
+
         this.patientRepository = patientRepository;
         this.eventRepository = eventRepository;
         this.triageExtractor = triageExtractor;
-        this.rulesEngine = rulesEngine;
         this.resourceAllocator = resourceAllocator;
         this.messagingTemplate = messagingTemplate;
+        this.textTriageService = textTriageService;
     }
 
     @Transactional
     public Patient registerAndTriage(@NotNull RegistrationRequest request) {
         log.info("Starting intake for patient: {}", request.getName());
 
-        // 1. AI Extraction
+        // 1. AI Extraction (optional, keep for vitals etc.)
         ExtractionResult extractionResult = triageExtractor.extract(request.getSymptoms());
 
-        // 2. Rules Engine
-        TriagePriority priority = rulesEngine.calculatePriority(extractionResult);
+        // 🔥 2. ML MODEL PREDICTION (MAIN FIX)
+        String aiResult = textTriageService.predict(request.getSymptoms());
 
-        // 3. Create Patient (Mapping from Request + AI Result)
+        log.info("AI TRIAGE RESULT: {}", aiResult);
+
+        // 🔥 3. MAP TO ENUM
+        TriagePriority priority = switch (aiResult) {
+            case "CRITICAL" -> TriagePriority.RED;
+            case "URGENT" -> TriagePriority.YELLOW;
+            default -> TriagePriority.GREEN;
+        };
+
+        // 4. CREATE PATIENT
         Patient patient = Patient.builder()
                 .name(request.getName() != null ? request.getName() : "Unknown")
                 .email(request.getEmail())
@@ -69,7 +83,10 @@ public class PatientService {
                 .extractedSymptoms(extractionResult != null ? extractionResult.getSymptoms() : new java.util.ArrayList<>())
                 .chiefComplaint(extractionResult != null ? extractionResult.getChiefComplaint() : "No Chief Complaint")
                 .vitals(extractionResult != null ? extractionResult.getVitals() : new Patient.Vitals())
+
+                // 🔥 THIS IS THE FINAL FIX
                 .priority(priority)
+
                 .status(PatientStatus.TRIAGED)
                 .createdAt(LocalDateTime.now())
                 .updatedAt(LocalDateTime.now())
@@ -77,14 +94,19 @@ public class PatientService {
 
         Patient savedPatient = patientRepository.save(patient);
 
-        // 4. Resource Allocation
+        // 5. RESOURCE ALLOCATION
         resourceAllocator.allocateResource(savedPatient);
         savedPatient = patientRepository.save(savedPatient);
 
-        // 5. Audit Logging
-        logEvent(savedPatient, "INTAKE", "New patient intake and AI triage completed", null, PatientStatus.TRIAGED, null, priority);
+        // 6. AUDIT LOG
+        logEvent(savedPatient, "INTAKE",
+                "New patient intake and AI triage completed",
+                null,
+                PatientStatus.TRIAGED,
+                null,
+                priority);
 
-        // 6. Broadcast Real-time
+        // 7. REAL-TIME UPDATE
         broadcastUpdate(savedPatient);
 
         return savedPatient;
@@ -102,13 +124,28 @@ public class PatientService {
     public void softDelete(@NotNull String id) {
         Patient patient = patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+
         patient.setIsDeleted(true);
         patientRepository.save(patient);
-        logEvent(patient, "DISMISS", "Patient moved to recycle bin", null, null, null, null);
+
+        logEvent(patient, "DISMISS",
+                "Patient moved to recycle bin",
+                null,
+                null,
+                null,
+                null);
+
         broadcastUpdate(patient);
     }
 
-    private void logEvent(Patient patient, String type, String desc, PatientStatus prevStatus, PatientStatus nextStatus, TriagePriority prevPri, TriagePriority nextPri) {
+    private void logEvent(Patient patient,
+                          String type,
+                          String desc,
+                          PatientStatus prevStatus,
+                          PatientStatus nextStatus,
+                          TriagePriority prevPri,
+                          TriagePriority nextPri) {
+
         PatientEvent event = PatientEvent.builder()
                 .patientId(patient.getId())
                 .eventType(type)
@@ -118,6 +155,7 @@ public class PatientService {
                 .prevPriority(prevPri)
                 .nextPriority(nextPri)
                 .build();
+
         eventRepository.save(event);
     }
 
