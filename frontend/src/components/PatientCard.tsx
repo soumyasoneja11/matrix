@@ -4,6 +4,8 @@ import { motion } from 'framer-motion';
 import { FaHeartbeat, FaThermometerHalf, FaTint, FaClock, FaUserMd, FaMapMarkerAlt, FaRedo } from 'react-icons/fa';
 import { Download, RefreshCw, QrCode } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { useDraggable } from '@dnd-kit/core';
+import { CSS } from '@dnd-kit/utilities';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientDetailModal from './PatientDetailModal';
 import QRModal from './QRCode/QRDisplay';
@@ -18,6 +20,16 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isQROpen, setIsQROpen] = useState(false);
+
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({
+    id: patient.id,
+    data: { patient },
+  });
+
+  const dndStyle = transform ? {
+    transform: CSS.Translate.toString(transform),
+    zIndex: isDragging ? 50 : 1,
+  } : undefined;
 
   const getSeverityConfig = () => {
     switch (patient.triageLevel) {
@@ -48,21 +60,31 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
 
   return (
     <>
-      <motion.div
-        initial={{ opacity: 0, scale: 0.97 }}
-        animate={{ opacity: 1, scale: 1 }}
-        whileHover={{ y: -2 }}
-        onClick={() => setIsModalOpen(true)}
-        className={`
-          rounded-xl border-l-[3px] cursor-pointer flex flex-col
-          transition-all duration-200
-          ${severity.borderColor}
-          ${isLight
-            ? 'bg-white border border-gray-100 shadow-sm hover:shadow-md'
-            : 'bg-white/[0.04] border border-white/[0.06] hover:bg-white/[0.07]'
-          }
-        `}
+      <div 
+        ref={setNodeRef} 
+        style={dndStyle} 
+        {...attributes} 
+        {...listeners}
+        className={isDragging ? 'opacity-80 scale-105 z-50 cursor-grabbing' : 'cursor-grab'}
       >
+        <motion.div
+          initial={{ opacity: 0, scale: 0.97 }}
+          animate={{ opacity: 1, scale: 1 }}
+          whileHover={{ y: -2 }}
+          onClick={(e) => {
+            if (isDragging) return;
+            setIsModalOpen(true);
+          }}
+          className={`
+            rounded-xl border-l-[3px] flex flex-col
+            transition-all duration-200 pointer-events-auto
+            ${severity.borderColor}
+            ${isLight
+              ? `bg-white border-gray-100 shadow-sm ${isDragging ? 'shadow-xl ring-2 ring-[#247B7B]/30' : 'hover:shadow-md'}`
+              : `bg-white/[0.04] border-white/[0.06] ${isDragging ? 'shadow-2xl shadow-primary-500/20 ring-2 ring-primary-500/50 bg-white/[0.08]' : 'hover:bg-white/[0.07]'}`
+            }
+          `}
+        >
         {/* Main content area */}
         <div className="p-4 space-y-3 flex-1">
 
@@ -166,7 +188,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
         </div>
 
         {/* ── RE-TRIAGE CTA (bottom, full-width) ── */}
-        <div className="px-4 pb-4 mt-auto" onClick={(e) => e.stopPropagation()}>
+        <div className="px-4 pb-4 mt-auto" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => e.stopPropagation()}>
           <div className={sectionDivider} />
           <button
             className={`w-full mt-3 py-2.5 rounded-lg text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 ${isLight
@@ -178,7 +200,8 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
             Re-triage
           </button>
         </div>
-      </motion.div>
+        </motion.div>
+      </div>
 
       <PatientDetailModal
         patient={patient}

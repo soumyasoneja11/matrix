@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
 import { fetchPatients } from '../services/api';
@@ -53,15 +53,24 @@ const Dashboard = () => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
+  // ✅ FIX: pauseRefresh is a ref, not state.
+  // When it was useState, setInterval captured a stale closure of the old value
+  // (false) at mount time and ignored all future setPauseRefresh(true) calls.
+  // A ref is always read at call time, so the interval sees the live value.
+  // Also: writing to a ref does NOT cause a Dashboard re-render, which means
+  // TriageBoard never gets remounted mid-drag (which was also reverting state).
+  const pauseRefreshRef = useRef(false);
+
   const loadPatients = async () => {
+    if (pauseRefreshRef.current) return;
     try {
       const data = await fetchPatients();
       setPatients(data.length > 0 ? data : DEMO_PATIENTS);
       setLastUpdate(new Date());
-    } catch (error) {
-      console.error('Failed to load patients:', error);
-      // Keep demo patients on error
-      if (patients.length === 0) setPatients(DEMO_PATIENTS);
+      setError(null);
+    } catch (err) {
+      console.error('Failed to load patients:', err);
+      setPatients(prev => prev.length === 0 ? DEMO_PATIENTS : prev);
     } finally {
       setLoading(false);
     }
@@ -69,13 +78,19 @@ const Dashboard = () => {
 
   useEffect(() => {
     loadPatients();
+    // ✅ Single stable interval — no dependency on pauseRefreshRef.
+    // The ref check inside loadPatients() handles skipping correctly.
     const interval = setInterval(loadPatients, 4000);
     return () => clearInterval(interval);
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // ✅ This is what TriageBoard calls — writes to ref, no re-render
+  const setPauseRefresh = (pause: boolean) => {
+    pauseRefreshRef.current = pause;
+  };
 
   return (
     <div className="space-y-6">
-
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">
           <PatientTriageForm onPatientAdded={loadPatients} />
@@ -88,7 +103,7 @@ const Dashboard = () => {
               </div>
               <h3 className="text-xl font-bold text-white mb-2">Sync Error</h3>
               <p className="text-white/60 mb-6">{error}</p>
-              <button 
+              <button
                 onClick={loadPatients}
                 className="px-6 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl transition-all"
               >
@@ -97,15 +112,21 @@ const Dashboard = () => {
             </div>
           ) : loading ? (
             <div className="glass-card p-12 text-center">
-              <div className={`animate-spin w-8 h-8 border-4 border-t-transparent rounded-full mx-auto mb-4 ${isLight ? 'border-[#247B7B]' : 'border-primary-500'}`} />
+              <div className={`animate-spin w-8 h-8 border-4 border-t-transparent rounded-full mx-auto mb-4 ${
+                isLight ? 'border-[#247B7B]' : 'border-primary-500'
+              }`} />
               <p className="theme-text-muted">Loading triage dashboard...</p>
             </div>
           ) : (
-            <TriageBoard patients={patients} onPatientUpdate={loadPatients} />
+            <TriageBoard
+              patients={patients}
+              onPatientUpdate={loadPatients}
+              setPauseRefresh={setPauseRefresh}
+            />
           )}
         </div>
       </div>
-      
+
       <div className={`text-center text-xs pt-4 ${isLight ? 'text-[#b0bfbf]' : 'text-white/30'}`}>
         Last updated: {lastUpdate.toLocaleTimeString()} · Live data feed active
       </div>

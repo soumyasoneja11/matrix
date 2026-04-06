@@ -6,6 +6,7 @@ import {
   FaUserCog,
   FaClipboardList,
   FaChartLine,
+  FaHistory,
 } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
@@ -15,6 +16,7 @@ const navItems = [
   { path: '/staff-directory', icon: FaUsers, label: 'Staff Directory' },
   { path: '/staff-management', icon: FaUserCog, label: 'Staff Management' },
   { path: '/my-worklist', icon: FaClipboardList, label: 'My Worklist' },
+  { path: '/patient-history', icon: FaHistory, label: 'Patient History' },
   { path: '/analytics', icon: FaChartLine, label: 'Analytics' },
 ];
 
