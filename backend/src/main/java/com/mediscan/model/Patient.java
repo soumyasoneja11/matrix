@@ -47,6 +47,16 @@ public class Patient {
     
     private Vitals vitals;
     
+    public String getDisplayPriority() {
+        return switch (this.priority) {
+            case RED -> "CRITICAL";
+            case ORANGE -> "URGENT";
+            case YELLOW -> "URGENT";
+            case GREEN -> "STANDARD";
+            case BLUE -> "STANDARD";
+        };
+    }
+
     private TriagePriority priority;
     
     private PatientStatus status = PatientStatus.INTAKE;
