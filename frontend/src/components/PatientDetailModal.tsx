@@ -70,7 +70,12 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
   };
 
   const severity = getSeverityConfig();
-  const createdDate = new Date(patient.createdAt ?? new Date());
+
+  
+
+  const createdDateStr = patient?.createdAt || patient?.updatedAt || new Date().toISOString();
+  const createdDate = new Date(createdDateStr);
+
 
   const triageRationale: Record<string, { text: string; confidence: number }> = {
     CRITICAL: { text: 'Patient presents with high-acuity symptoms requiring immediate intervention. Vital signs indicate hemodynamic instability.', confidence: 92 },
@@ -128,7 +133,7 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                     </span>
                   </div>
                   <p className={`text-sm mt-0.5 ${isLight ? 'text-gray-500' : 'text-white/50'}`}>
-                    Age {patient.age || 'N/A'} · {patient.location || 'Unassigned'}
+                    Age {patient?.age || 'N/A'} · {patient?.location || 'Unassigned'}
                   </p>
                 </div>
               </div>
@@ -162,7 +167,9 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                 {patient.vitals && (
                   <section>
                     <h3 className={`${sectionHeading} flex items-center gap-1.5`}>
-                      <FaHeartbeat className="text-red-400" size={12} />
+                      <span className="text-red-400">
+                      <FaHeartbeat size={12} />
+                      </span>
                       Vitals
                     </h3>
                     <div className="grid grid-cols-3 gap-3">
@@ -230,17 +237,17 @@ const PatientDetailModal: React.FC<PatientDetailModalProps> = ({ patient, isOpen
                       isLight={isLight}
                       dotColor={severity.dot}
                     />
-                    {patient.assignedStaff && (
-                      <TimelineItem
-                        label="Assignment"
-                        desc={`Assigned to ${patient.assignedStaff}`}
-                        time={new Date(patient.updatedAt ?? patient.createdAt ?? new Date()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
-                        actor="System"
-                        isLight={isLight}
-                        dotColor="bg-purple-500"
-                        isLast
-                      />
-                    )}
+{(patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId) && (
+  <TimelineItem
+    label="Assignment"
+    desc={`Assigned to ${patient?.assignedStaff || patient?.assignedDoctorId || patient?.assignedNurseId}`}
+    time={new Date(patient?.updatedAt || Date.now()).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
+    actor="System"
+    isLight={isLight}
+    dotColor="bg-purple-500"
+    isLast
+  />
+)}
                   </div>
                 </section>
 

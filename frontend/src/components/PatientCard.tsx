@@ -108,7 +108,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
           </div>
 
           {/* Vitals */}
-          {patient.vitals && (
+          {patient?.vitals && (
             <div>
               <p className={labelClass}>Vitals</p>
               <div className="mt-1 space-y-1">
@@ -135,26 +135,22 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
           )}
 
           {/* Doctor / Assigned */}
-          {patient.assignedStaff && (
-            <div>
-              <p className={labelClass}>Doctor / Assigned</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <FaUserMd size={11} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
-                <span className={valueClass}>{patient.assignedStaff}</span>
-              </div>
+          <div className="mt-1">
+            <p className={labelClass}>Doctor / Assigned</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <FaUserMd size={11} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
+              <span className={valueClass}>{patient?.assignedStaff || 'Unassigned'}</span>
             </div>
-          )}
+          </div>
 
           {/* Location */}
-          {patient.location && (
-            <div>
-              <p className={labelClass}>Location</p>
-              <div className="flex items-center gap-1.5 mt-0.5">
-                <FaMapMarkerAlt size={11} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
-                <span className={valueClass}>{patient.location}</span>
-              </div>
+          <div className="mt-1">
+            <p className={labelClass}>Location</p>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              <FaMapMarkerAlt size={11} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
+              <span className={valueClass}>{patient?.location || 'Processing...'}</span>
             </div>
-          )}
+          </div>
 
           {/* Time */}
           <div>

@@ -1,0 +1,51 @@
+[INFO] Scanning for projects...
+[INFO] 
+[INFO] ------------------------< com.mediscan:backend >------------------------
+[INFO] Building mediscan-backend 0.0.1-SNAPSHOT
+[INFO]   from pom.xml
+[INFO] --------------------------------[ jar ]---------------------------------
+[INFO] 
+[INFO] --- resources:3.3.1:resources (default-resources) @ backend ---
+[INFO] Copying 1 resource from src\main\resources to target\classes
+[INFO] Copying 0 resource from src\main\resources to target\classes
+[INFO] 
+[INFO] --- compiler:3.13.0:compile (default-compile) @ backend ---
+[INFO] Recompiling the module because of changed source code.
+[INFO] Compiling 48 source files with javac [debug parameters release 21] to target\classes
+[INFO] -------------------------------------------------------------
+[WARNING] COMPILATION WARNING : 
+[INFO] -------------------------------------------------------------
+[WARNING] /C:/College/dev/matrix/backend/src/main/java/com/mediscan/model/Room.java:[34,21] @Builder will ignore the initializing expression entirely. If you want the initializing expression to serve as default, add @Builder.Default. If it is not supposed to be settable during building, make the field final.
+[INFO] 1 warning
+[INFO] -------------------------------------------------------------
+[INFO] -------------------------------------------------------------
+[ERROR] COMPILATION ERROR : 
+[INFO] -------------------------------------------------------------
+[ERROR] /C:/College/dev/matrix/backend/src/main/java/com/mediscan/service/PatientService.java:[31,19] cannot find symbol
+  symbol:   class TriageExtractor
+  location: class com.mediscan.service.PatientService
+[ERROR] /C:/College/dev/matrix/backend/src/main/java/com/mediscan/service/PatientService.java:[25,1] cannot find symbol
+  symbol:   class TriageExtractor
+  location: class com.mediscan.service.PatientService
+[INFO] 2 errors 
+[INFO] -------------------------------------------------------------
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD FAILURE
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  6.473 s
+[INFO] Finished at: 2026-04-05T23:59:20+05:30
+[INFO] ------------------------------------------------------------------------
+[ERROR] Failed to execute goal org.apache.maven.plugins:maven-compiler-plugin:3.13.0:compile (default-compile) on project backend: Compilation failure: Compilation failure: 
+[ERROR] /C:/College/dev/matrix/backend/src/main/java/com/mediscan/service/PatientService.java:[31,19] cannot find symbol
+[ERROR]   symbol:   class TriageExtractor
+[ERROR]   location: class com.mediscan.service.PatientService
+[ERROR] /C:/College/dev/matrix/backend/src/main/java/com/mediscan/service/PatientService.java:[25,1] cannot find symbol
+[ERROR]   symbol:   class TriageExtractor
+[ERROR]   location: class com.mediscan.service.PatientService
+[ERROR] -> [Help 1]
+[ERROR] 
+[ERROR] To see the full stack trace of the errors, re-run Maven with the -e switch.
+[ERROR] Re-run Maven using the -X switch to enable full debug logging.
+[ERROR] 
+[ERROR] For more information about the errors and possible solutions, please read the following articles:
+[ERROR] [Help 1] http://cwiki.apache.org/confluence/display/MAVEN/MojoFailureException
