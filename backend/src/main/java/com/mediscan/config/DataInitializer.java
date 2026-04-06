@@ -8,6 +8,7 @@ import com.mediscan.model.enums.TriagePriority;
 import com.mediscan.repository.RoomRepository;
 import com.mediscan.repository.UserRepository;
 import com.mediscan.repository.ZoneRepository;
+import org.springframework.beans.factory.annotation.Value;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.CommandLineRunner;
@@ -25,6 +26,15 @@ public class DataInitializer implements CommandLineRunner {
     private final RoomRepository roomRepository;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
+
+    @Value("${bootstrap.admin.username:admin}")
+    private String bootstrapAdminUsername;
+
+    @Value("${bootstrap.admin.email:admin@vitalpass.com}")
+    private String bootstrapAdminEmail;
+
+    @Value("${bootstrap.admin.password:}")
+    private String bootstrapAdminPassword;
 
     public DataInitializer(ZoneRepository zoneRepository, 
                            RoomRepository roomRepository, 
@@ -53,18 +63,33 @@ public class DataInitializer implements CommandLineRunner {
             roomRepository.save(Room.builder().roomCode("OR-01").zoneId(orangeZone.getId()).equipment(List.of("Monitor", "Oxygen")).build());
             roomRepository.save(Room.builder().roomCode("YL-01").zoneId(yellowZone.getId()).equipment(List.of("Monitor")).build());
             roomRepository.save(Room.builder().roomCode("GN-01").zoneId(greenZone.getId()).build());
-
-            log.info("Seeding initial administrative user...");
-            if (userRepository.findByUsername("admin").isEmpty()) {
-                userRepository.save(User.builder()
-                        .username("admin")
-                        .fullName("System Administrator")
-                        .email("admin@vitalpass.com")
-                        .password(passwordEncoder.encode("admin123"))
-                        .role(Role.ADMIN)
-                        .active(true)
-                        .build());
-            }
         }
+
+        ensureAdminUser();
+    }
+
+    private void ensureAdminUser() {
+        log.info("Ensuring administrative user exists...");
+        var existing = userRepository.findByUsername(bootstrapAdminUsername);
+        if (existing.isPresent()) {
+            log.info("Admin user '{}' already exists. Skipping bootstrap update.", bootstrapAdminUsername);
+            return;
+        }
+
+        if (bootstrapAdminPassword == null || bootstrapAdminPassword.isBlank()) {
+            log.warn("No bootstrap admin password configured. Skipping admin auto-creation. Set bootstrap.admin.password to create the initial admin user.");
+            return;
+        }
+
+        userRepository.save(User.builder()
+                .username(bootstrapAdminUsername)
+                .fullName("System Administrator")
+                .email(bootstrapAdminEmail)
+                .password(passwordEncoder.encode(bootstrapAdminPassword))
+                .role(Role.ADMIN)
+                .active(true)
+                .build());
+
+        log.info("Bootstrap admin user '{}' created. Rotate credentials after first login.", bootstrapAdminUsername);
     }
 }

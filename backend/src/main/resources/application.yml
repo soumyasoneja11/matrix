@@ -26,8 +26,14 @@ ai:
     url: https://api-inference.huggingface.co/models/mistralai/Mistral-7B-Instruct-v0.2
 
 jwt:
-  secret: dGhpc0lzQVZlcnlMb25nU2VjcmV0S2V5Rm9yRGV2T25seURvTm90VXNlSW5Qcm9kdWN0aW9uMTIzNDU2
+  secret: ${JWT_SECRET}
   expiration: 86400000
+
+bootstrap:
+  admin:
+    username: ${BOOTSTRAP_ADMIN_USERNAME:admin}
+    email: ${BOOTSTRAP_ADMIN_EMAIL:admin@vitalpass.com}
+    password: ${BOOTSTRAP_ADMIN_PASSWORD:}
 
 logging:
   level:
