@@ -1,4 +1,6 @@
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+
+
 import PatientTriageForm from '../components/PatientTriageForm';
 import TriageBoard from '../components/TriageBoard';
 import { fetchPatients } from '../services/api';
@@ -50,19 +52,17 @@ const Dashboard = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
+
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  // ✅ FIX: pauseRefresh is a ref, not state.
-  // When it was useState, setInterval captured a stale closure of the old value
-  // (false) at mount time and ignored all future setPauseRefresh(true) calls.
-  // A ref is always read at call time, so the interval sees the live value.
-  // Also: writing to a ref does NOT cause a Dashboard re-render, which means
-  // TriageBoard never gets remounted mid-drag (which was also reverting state).
+  // pauseRefresh is a ref so setInterval always sees the live value
+  // (no stale closure), and writing to it doesn't re-render Dashboard.
   const pauseRefreshRef = useRef(false);
 
-  const loadPatients = async () => {
+  const loadPatients = useCallback(async () => {
     if (pauseRefreshRef.current) return;
+
     try {
       const data = await fetchPatients();
       setPatients(data.length > 0 ? data : DEMO_PATIENTS);
@@ -74,20 +74,20 @@ const Dashboard = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
+  // Single stable interval — the ref check inside loadPatients handles pausing.
   useEffect(() => {
     loadPatients();
-    // ✅ Single stable interval — no dependency on pauseRefreshRef.
-    // The ref check inside loadPatients() handles skipping correctly.
     const interval = setInterval(loadPatients, 4000);
     return () => clearInterval(interval);
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [loadPatients]);
 
-  // ✅ This is what TriageBoard calls — writes to ref, no re-render
+  // This is what TriageBoard calls — writes to ref, no re-render
   const setPauseRefresh = (pause: boolean) => {
     pauseRefreshRef.current = pause;
   };
+
 
   return (
     <div className="space-y-6">

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaBed,
   FaLungs,
@@ -19,8 +19,10 @@ import { useTheme } from '../hooks/contexts/ThemeContext';
 
 const ResourceAllocation = () => {
   const [zones, setZones] = useState(DEMO_ZONES);
-  const [rooms] = useState(DEMO_ROOMS);
+  const [rooms, setRooms] = useState(DEMO_ROOMS);
   const [showError, setShowError] = useState(true);
+  const [zoneSuccess, setZoneSuccess] = useState('');
+  const [roomSuccess, setRoomSuccess] = useState('');
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -42,16 +44,31 @@ const ResourceAllocation = () => {
       GREEN: 'STANDARD',
     };
     const newZone = {
-      id: String(zones.length + 1),
+      id: String(Date.now()),
       name: data.name,
       severityBand: triageMap[data.severityBand] || 'STANDARD',
       description: data.description,
     };
-    setZones([...zones, newZone]);
+    setZones((prev) => [...prev, newZone]);
+    setZoneSuccess(`Zone "${data.name}" created successfully!`);
+    setTimeout(() => setZoneSuccess(''), 4000);
   };
 
   const handleAddRoom = (data: { zoneId: string; roomCode: string; capacity: number }) => {
-    console.log('Room added:', data);
+    const targetZone = zones.find((z) => z.id === data.zoneId);
+    if (!targetZone) return;
+
+    const newRoom = {
+      id: String(Date.now()),
+      roomCode: data.roomCode,
+      zoneId: data.zoneId,
+      zoneName: targetZone.name,
+      equipment: [] as string[],
+      occupied: false,
+    };
+    setRooms((prev) => [...prev, newRoom]);
+    setRoomSuccess(`Room "${data.roomCode}" added to ${targetZone.name}!`);
+    setTimeout(() => setRoomSuccess(''), 4000);
   };
 
   const severityColors: Record<string, string> = {
@@ -138,10 +155,11 @@ const ResourceAllocation = () => {
 
       {/* C & D. Zone & Room Forms — Side by Side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <ZoneForm onSubmit={handleCreateZone} />
+        <ZoneForm onSubmit={handleCreateZone} successMessage={zoneSuccess} />
         <RoomForm
           zones={zones.map((z) => ({ id: z.id, name: z.name }))}
           onSubmit={handleAddRoom}
+          successMessage={roomSuccess}
         />
       </div>
 
@@ -161,6 +179,7 @@ const ResourceAllocation = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+<<<<<<< HEAD
             {zones.map((zone, idx) => (
               <motion.div
                 key={zone.id}
@@ -198,6 +217,52 @@ const ResourceAllocation = () => {
                 </div>
               </motion.div>
             ))}
+=======
+            <AnimatePresence>
+              {zones.map((zone, idx) => (
+                <motion.div
+                  key={zone.id}
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.9 }}
+                  transition={{ delay: 0.4 + idx * 0.05 }}
+                  layout
+                  className="glass-card p-5 hover-lift"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div
+                      className={`w-10 h-10 rounded-xl bg-gradient-to-r ${
+                        severityColors[zone.severityBand] || 'from-gray-500 to-gray-600'
+                      } flex items-center justify-center shadow-lg`}
+                    >
+                      <FaMapMarkerAlt className="text-white text-sm" />
+                    </div>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                        severityBadgeClass[zone.severityBand] || ''
+                      }`}
+                    >
+                      {zone.severityBand}
+                    </span>
+                  </div>
+                  <h3 className="font-bold text-base theme-text">{zone.name}</h3>
+                  <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isLight ? 'text-[#6b7e7e]' : 'text-white/50'}`}>
+                    {zone.description}
+                  </p>
+                  <div className={`mt-3 pt-3 border-t flex items-center justify-between text-xs ${
+                    isLight ? 'border-[#e8e2d9] text-[#94a3a3]' : 'border-white/10 text-white/40'
+                  }`}>
+                    <span>
+                      {rooms.filter((r) => r.zoneId === zone.id).length} rooms
+                    </span>
+                    <span>
+                      {rooms.filter((r) => r.zoneId === zone.id && r.occupied).length} occupied
+                    </span>
+                  </div>
+                </motion.div>
+              ))}
+            </AnimatePresence>
+>>>>>>> c27a25b60078aa6e7aed2c6c7519c0beffe24dee
           </div>
         )}
       </motion.div>

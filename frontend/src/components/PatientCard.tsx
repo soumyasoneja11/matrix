@@ -13,9 +13,10 @@ import QRModal from './QRCode/QRDisplay';
 interface PatientCardProps {
   patient: Patient;
   onUpdate: () => void;
+  isOverlay?: boolean;
 }
 
-const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
+const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate, isOverlay = false }) => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,6 +61,7 @@ const PatientCard: React.FC<PatientCardProps> = ({ patient, onUpdate }) => {
 
   return (
     <>
+
       <div 
         ref={setNodeRef} 
         style={dndStyle} 

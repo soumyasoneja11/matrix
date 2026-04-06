@@ -3,6 +3,7 @@ import { Patient, TriageLevel } from '../types';
 import KanbanColumn from './KanbanColumn';
 import ConfirmationModal from './ConfirmationModal';
 import ToastNotification from './ToastNotification';
+import PatientCard from './PatientCard';
 import { AnimatePresence } from 'framer-motion';
 import { FaSkullCrossbones, FaExclamationTriangle, FaShieldAlt } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
@@ -11,11 +12,10 @@ import {
   useSensor, useSensors, PointerSensor, TouchSensor,
   DragOverlay, closestCorners
 } from '@dnd-kit/core';
-import PatientCard from './PatientCard';
 import { patientAPI } from '../services/api';
 import { useNotifications } from '../hooks/contexts/NotificationContext';
 
-interface TriageBoardProps {
+interface TriageBoardProps{
   patients: Patient[];
   onPatientUpdate: () => void;
   setPauseRefresh: (pause: boolean) => void;
@@ -51,12 +51,8 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
     id: string; message: string; type: 'success' | 'error'
   } | null>(null);
 
-  // ✅ THE CORE FIX:
   // Watch incoming `patients` prop. When the backend data finally reflects
-  // our committed move (the patient appears in the correct column), THEN
-  // release the ref and let props take over naturally.
-  // This means no matter how many 4s polls fire, the card stays put until
-  // the server confirms the change — then we hand off cleanly.
+  // our committed move, release the ref and let props take over naturally.
   useEffect(() => {
     if (!committedPatientsRef.current || !pendingMoveRef.current) return;
 
@@ -70,10 +66,7 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
       setPauseRefresh(false);
       forceRender();
     }
-    // If the incoming data does NOT yet reflect the move, we do nothing —
-    // committedPatientsRef keeps holding our optimistic state, and the
-    // columns continue to render from it. The next 4s poll will try again.
-  }, [patients]);
+  }, [patients, setPauseRefresh]);
 
   const displayPatients: Patient[] = committedPatientsRef.current ?? patients;
 
@@ -137,10 +130,7 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate, se
     setPendingDrop(null);
     setActivePatient(null);
 
-    // 4. Keep refresh PAUSED — it will be unpaused inside the useEffect above
-    // once the backend data confirms the move. Do NOT call setPauseRefresh(false) here.
-
-    // 5. Notify both channels
+    // 4. Notify both channels
     const successMsg = `${patientName} moved to ${targetLabel}`;
     setToast({ id: Date.now().toString(), message: successMsg, type: 'success' });
     addNotification(successMsg, 'success');

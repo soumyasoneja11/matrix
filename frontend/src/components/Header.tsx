@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { FaBell, FaUserCircle, FaSearch } from 'react-icons/fa';
-import { Sun, Moon, PanelLeftClose, PanelLeftOpen, CheckCheck, Trash2 } from 'lucide-react';
+
+import { CheckCheck, Trash2, Sun, Moon, PanelLeftClose, PanelLeftOpen } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import { useSidebar } from '../hooks/contexts/SidebarContext';
@@ -12,6 +13,22 @@ const Header = () => {
   const { theme, toggleTheme } = useTheme();
   const { isCollapsed, toggleSidebar } = useSidebar();
   const isLight = theme === 'light';
+  const notifRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (notifRef.current && !notifRef.current.contains(e.target as Node)) {
+        setShowNotifications(false);
+      }
+    };
+    if (showNotifications) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showNotifications]);
+
+
 
   // ✅ FIX: Previously Header hardcoded "No new notifications" and never
   // connected to NotificationContext at all. Now it reads live from the context
@@ -49,7 +66,7 @@ const Header = () => {
   };
 
   return (
-    <header className="glass-card m-4 mb-0 px-5 py-2.5 flex justify-between items-center">
+    <header className="glass-card m-4 mb-0 px-5 py-2.5 flex justify-between items-center overflow-visible relative" style={{ zIndex: 50 }}>
       <div className="flex items-center gap-3 flex-1 max-w-md">
         {/* Sidebar Toggle */}
         <motion.button
@@ -96,13 +113,13 @@ const Header = () => {
         </motion.button>
 
         {/* Notification Bell */}
-        <div className="relative">
+        <div className="relative" ref={notifRef}>
           <button
             onClick={handleBellClick}
-            className="relative p-2 rounded-xl theme-bg-hover transition-all"
+            className="relative p-2 rounded-xl theme-bg-hover transition-all cursor-pointer"
+            id="notification-bell-btn"
           >
             <FaBell className="theme-text-muted text-xl" />
-            {/* ✅ Badge only shows when there are unread notifications */}
             {unreadCount > 0 && (
               <span className="absolute top-1 right-1 min-w-[16px] h-4 px-0.5 bg-red-500 rounded-full flex items-center justify-center">
                 <span className="text-[9px] font-bold text-white leading-none">
@@ -169,7 +186,7 @@ const Header = () => {
                         <div
                           key={n.id}
                           className={`mx-2 my-1 px-3 py-2.5 rounded-lg text-sm ${typeStyles[n.type]} ${
-                            !n.read ? (isLight ? 'opacity-100' : 'opacity-100') : (isLight ? 'opacity-60' : 'opacity-40')
+                            !n.read ? 'opacity-100' : (isLight ? 'opacity-60' : 'opacity-40')
                           }`}
                         >
                           <div className="flex items-start gap-2">
@@ -187,6 +204,17 @@ const Header = () => {
                       ))}
                     </div>
                   )}
+                </div>
+
+                {/* Footer */}
+                <div className={`px-5 py-3 text-center border-t ${
+                  isLight ? 'border-gray-100 bg-gray-50/40' : 'border-white/5 bg-white/[0.02]'
+                }`}>
+                  <button className={`text-xs font-medium transition-colors ${
+                    isLight ? 'text-primary-600 hover:text-primary-700' : 'text-primary-400 hover:text-primary-300'
+                  }`}>
+                    View all notifications
+                  </button>
                 </div>
               </motion.div>
             )}

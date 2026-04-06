@@ -59,28 +59,28 @@ const Footer: React.FC = () => {
             </h4>
             <ul className="space-y-2">
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/contact"
                   className={`text-sm transition-colors duration-200 ${isLight ? 'text-[#6b7e7e] hover:text-[#247B7B]' : 'text-white/50 hover:text-primary-400'}`}
                 >
                   Contact Support
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/privacy"
                   className={`text-sm transition-colors duration-200 ${isLight ? 'text-[#6b7e7e] hover:text-[#247B7B]' : 'text-white/50 hover:text-primary-400'}`}
                 >
                   Privacy Policy
-                </a>
+                </NavLink>
               </li>
               <li>
-                <a
-                  href="#"
+                <NavLink
+                  to="/terms"
                   className={`text-sm transition-colors duration-200 ${isLight ? 'text-[#6b7e7e] hover:text-[#247B7B]' : 'text-white/50 hover:text-primary-400'}`}
                 >
                   Terms of Service
-                </a>
+                </NavLink>
               </li>
             </ul>
           </div>

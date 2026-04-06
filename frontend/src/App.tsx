@@ -11,7 +11,13 @@ import StaffManagement from './pages/StaffManagement';
 import MyWorklist from './pages/MyWorklist';
 import Analytics from './pages/Analytics';
 import RecycleBin from './pages/RecycleBin';
+
 import PatientHistory from './pages/PatientHistory';
+
+import ContactPage from './pages/ContactPage';
+import PrivacyPage from './pages/PrivacyPage';
+import TermsPage from './pages/TermsPage';
+
 import { LoginPage } from './pages/LoginPage';
 import { SignUpPage } from './pages/SignUpPage';
 
@@ -46,6 +52,7 @@ function App() {
   // Without this, useNotifications() in Header and TriageBoard had no
   // context to read from — the hook either threw or returned undefined.
   return (
+
     <NotificationProvider>
       <Routes>
         <Route path="/" element={<HomePage />} />
@@ -62,6 +69,7 @@ function App() {
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </NotificationProvider>
+
   );
 }
 

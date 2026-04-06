@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTheme } from '../../hooks/contexts/ThemeContext';
 
 interface TextAreaFieldProps {
   label?: string;
@@ -25,10 +26,15 @@ export function TextAreaField({
   required = false,
   error,
 }: TextAreaFieldProps) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-forest-800 mb-2">
+        <label className={`block text-sm font-semibold mb-2 ${
+          isLight ? 'text-forest-800' : 'text-gray-200'
+        }`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -44,19 +50,13 @@ export function TextAreaField({
         className={`
           w-full px-4 py-3 
           rounded-xl
-          border border-forest-200 
-          bg-white/80
-          text-forest-900 
-          placeholder:text-forest-400
-          focus:outline-none 
-          focus:ring-2 
-          focus:ring-primary-400 
-          focus:border-transparent
-          disabled:bg-forest-50 
-          disabled:text-forest-400 
+          border transition-all duration-200 resize-none
+          focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
           disabled:cursor-not-allowed
-          transition-all duration-200
-          resize-none
+          ${isLight
+            ? 'border-forest-200 bg-white/80 text-forest-900 placeholder:text-forest-400 disabled:bg-forest-50 disabled:text-forest-400'
+            : 'border-gray-600 bg-[#2A2A40] text-gray-200 placeholder:text-gray-500 disabled:bg-gray-800 disabled:text-gray-500'
+          }
           ${error ? 'border-red-400 focus:ring-red-400' : ''}
           ${className}
         `}
@@ -91,10 +91,15 @@ export function SelectField({
   required = false,
   error,
 }: SelectFieldProps) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-forest-800 mb-2">
+        <label className={`block text-sm font-semibold mb-2 ${
+          isLight ? 'text-forest-800' : 'text-gray-200'
+        }`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
@@ -108,18 +113,13 @@ export function SelectField({
         className={`
           w-full px-4 py-3
           rounded-xl
-          border border-forest-200
-          bg-white/80
-          text-forest-900
-          focus:outline-none
-          focus:ring-2
-          focus:ring-primary-400
-          focus:border-transparent
-          disabled:bg-forest-50
-          disabled:text-forest-400
+          border transition-all duration-200 cursor-pointer
+          focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
           disabled:cursor-not-allowed
-          transition-all duration-200
-          cursor-pointer
+          ${isLight
+            ? 'border-forest-200 bg-white/80 text-forest-900 disabled:bg-forest-50 disabled:text-forest-400'
+            : 'border-gray-600 bg-[#2A2A40] text-gray-200 disabled:bg-gray-800 disabled:text-gray-500'
+          }
           ${error ? 'border-red-400 focus:ring-red-400' : ''}
           ${className}
         `}
@@ -164,17 +164,24 @@ export function InputField({
   error,
   icon,
 }: InputFieldProps) {
+  const { theme } = useTheme();
+  const isLight = theme === 'light';
+
   return (
     <div className="w-full">
       {label && (
-        <label className="block text-sm font-semibold text-forest-800 mb-2">
+        <label className={`block text-sm font-semibold mb-2 ${
+          isLight ? 'text-forest-800' : 'text-gray-200'
+        }`}>
           {label}
           {required && <span className="text-red-500 ml-1">*</span>}
         </label>
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-forest-400">
+          <div className={`absolute left-3 top-1/2 -translate-y-1/2 ${
+            isLight ? 'text-forest-400' : 'text-gray-400'
+          }`}>
             {icon}
           </div>
         )}
@@ -190,18 +197,13 @@ export function InputField({
             w-full px-4 py-3
             ${icon ? 'pl-10' : ''}
             rounded-xl
-            border border-forest-200
-            bg-white/80
-            text-forest-900
-            placeholder:text-forest-400
-            focus:outline-none
-            focus:ring-2
-            focus:ring-primary-400
-            focus:border-transparent
-            disabled:bg-forest-50
-            disabled:text-forest-400
+            border transition-all duration-200
+            focus:outline-none focus:ring-2 focus:ring-primary-400 focus:border-transparent
             disabled:cursor-not-allowed
-            transition-all duration-200
+            ${isLight
+              ? 'border-forest-200 bg-white/80 text-forest-900 placeholder:text-forest-400 disabled:bg-forest-50 disabled:text-forest-400'
+              : 'border-gray-600 bg-[#2A2A40] text-gray-200 placeholder:text-gray-500 disabled:bg-gray-800 disabled:text-gray-500'
+            }
             ${error ? 'border-red-400 focus:ring-red-400' : ''}
             ${className}
           `}

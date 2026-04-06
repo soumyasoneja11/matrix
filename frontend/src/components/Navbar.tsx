@@ -50,9 +50,11 @@ const Navbar = () => {
                   flex items-center gap-2 px-3.5 py-1.5 rounded-full text-[0.8125rem] font-medium
                   whitespace-nowrap cursor-pointer transition-all duration-200
                   ${isActive
-                    ? 'bg-[#247B7B] text-white shadow-sm shadow-[#247B7B]/25'
+                    ? isLight
+                      ? 'bg-gradient-to-r from-[#247B7B] to-[#2a9d8f] text-white shadow-md shadow-[#247B7B]/25'
+                      : 'bg-gradient-to-r from-primary-600 to-purple-600 text-white shadow-md shadow-purple-500/30'
                     : isLight
-                      ? 'text-[#6b7e7e] hover:bg-[#247B7B]/8 hover:text-[#247B7B] hover:scale-105'
+                      ? 'text-[#6b7e7e] hover:bg-[#e8f5f5] hover:text-[#247B7B] hover:scale-105'
                       : 'text-white/60 hover:bg-white/8 hover:text-white hover:scale-105'
                   }
                 `}
