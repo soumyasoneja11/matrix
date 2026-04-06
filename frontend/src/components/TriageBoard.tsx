@@ -13,9 +13,9 @@ const TriageBoard: React.FC<TriageBoardProps> = ({ patients, onPatientUpdate }) 
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
-  const criticalPatients = patients.filter(p => p.triageLevel === TriageLevel.CRITICAL);
-  const urgentPatients = patients.filter(p => p.triageLevel === TriageLevel.URGENT);
-  const standardPatients = patients.filter(p => p.triageLevel === TriageLevel.STANDARD);
+  const criticalPatients = patients.filter(p => p.priority === 'RED' || p.priority === 'ORANGE' || p.triageLevel === TriageLevel.CRITICAL);
+  const urgentPatients = patients.filter(p => p.priority === 'YELLOW' || p.triageLevel === TriageLevel.URGENT);
+  const standardPatients = patients.filter(p => p.priority === 'GREEN' || p.priority === 'BLUE' || p.triageLevel === TriageLevel.STANDARD);
 
   const columns = [
     {
