@@ -179,7 +179,7 @@ const ResourceAllocation = () => {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-<<<<<<< HEAD
+
             {zones.map((zone, idx) => (
               <motion.div
                 key={zone.id}
@@ -217,7 +217,7 @@ const ResourceAllocation = () => {
                 </div>
               </motion.div>
             ))}
-=======
+
             <AnimatePresence>
               {zones.map((zone, idx) => (
                 <motion.div
@@ -262,7 +262,7 @@ const ResourceAllocation = () => {
                 </motion.div>
               ))}
             </AnimatePresence>
->>>>>>> c27a25b60078aa6e7aed2c6c7519c0beffe24dee
+
           </div>
         )}
       </motion.div>
