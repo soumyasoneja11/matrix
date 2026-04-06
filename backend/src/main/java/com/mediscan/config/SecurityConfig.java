@@ -41,14 +41,11 @@ public class SecurityConfig {
                 .cors(cors -> cors.configurationSource(corsConfigurationSource()))
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/ws/**").permitAll()
+                    .requestMatchers("/ws/**").authenticated()
 
-                        // 🔥 IMPORTANT FIX (ADD THIS)
                     .requestMatchers("/api/patients/triage-ai").permitAll()
-                        .requestMatchers("/api/patients/triage").permitAll() // optional
-
-                        // (optional for testing)
-                        .requestMatchers("/api/patients/**").permitAll()
+                    .requestMatchers("/api/patients/triage").permitAll()
+                    .requestMatchers("/api/patients/**").authenticated()
 
                         .anyRequest().authenticated()
                 )

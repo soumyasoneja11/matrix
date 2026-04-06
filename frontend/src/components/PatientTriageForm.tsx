@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import VoiceCaptureButton from './VoiceCaptureButton';
 import { createPatient } from '../services/api';
+import { Patient } from '../types';
 import { motion } from 'framer-motion';
 import { FaLanguage, FaMagic, FaClock, FaChartLine, FaMicrophone } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
 interface PatientTriageFormProps {
-  onPatientAdded: () => void;
+  onPatientAdded: (patient?: Patient) => void;
 }
 
 const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded }) => {
@@ -28,8 +29,8 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
   };
 
   const handleSubmit = async () => {
-    if (!description.trim() || !name.trim()) {
-      setError('Name and Symptoms are required for triage.');
+    if (!description.trim() || !name.trim() || !phoneNumber.trim()) {
+      setError('Name, phone number, and symptoms are required for triage.');
       return;
     }
     
@@ -37,7 +38,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
     setError(null);
     setSuccess(false);
     try {
-      await createPatient({ 
+      const createdPatient = await createPatient({ 
         name, 
         email, 
         phoneNumber, 
@@ -52,7 +53,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
       setAge('');
       setGender('');
       setSuccess(true);
-      onPatientAdded();
+      onPatientAdded(createdPatient);
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       setError(err.message || 'Failed to create patient record. Please try again.');
@@ -121,6 +122,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
               value={phoneNumber}
               onChange={(e) => setPhoneNumber(e.target.value)}
               placeholder="+1 (555) 000-0000"
+              required
               className={`w-full px-4 py-2 border rounded-xl focus:outline-none focus:border-primary-500 transition-all ${
                 isLight ? 'bg-[#f8f6f1] border-[#e0dbd2] text-[#1a2e2e]' : 'bg-white/5 border-white/10 text-white'
               }`}
@@ -205,7 +207,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         
         <button
           onClick={handleSubmit}
-          disabled={isSubmitting || !description.trim()}
+          disabled={isSubmitting || !description.trim() || !name.trim() || !phoneNumber.trim()}
           className="btn-primary w-full"
         >
           {isSubmitting ? 'Processing...' : 'Start Triage →'}

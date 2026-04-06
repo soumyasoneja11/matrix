@@ -20,6 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -111,11 +112,11 @@ public class PatientService {
     }
 
     public List<Patient> getActivePatients() {
-        return patientRepository.findByIsDeletedFalse();
+        return sortByClinicalPriorityThenRecent(patientRepository.findByIsDeletedFalse());
     }
 
     public List<Patient> getRecycleBin() {
-        return patientRepository.findByIsDeletedTrue();
+        return sortByClinicalPriorityThenRecent(patientRepository.findByIsDeletedTrue());
     }
     
     public Optional<Patient> getPatientById(String id) {
@@ -147,5 +148,27 @@ public class PatientService {
 
     private void broadcastUpdate(Patient patient) {
         messagingTemplate.convertAndSend("/topic/patients", patient);
+    }
+
+    private List<Patient> sortByClinicalPriorityThenRecent(List<Patient> patients) {
+        Comparator<Patient> comparator = Comparator
+                .comparingInt((Patient p) -> priorityRank(p.getPriority()))
+                .thenComparing(Patient::getCreatedAt, Comparator.nullsLast(Comparator.reverseOrder()))
+                .thenComparing(Patient::getUpdatedAt, Comparator.nullsLast(Comparator.reverseOrder()));
+
+        return patients.stream().sorted(comparator).toList();
+    }
+
+    private int priorityRank(TriagePriority priority) {
+        if (priority == null) {
+            return Integer.MAX_VALUE;
+        }
+        return switch (priority) {
+            case RED -> 0;
+            case ORANGE -> 1;
+            case YELLOW -> 2;
+            case GREEN -> 3;
+            case BLUE -> 4;
+        };
     }
 }

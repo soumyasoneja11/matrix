@@ -109,20 +109,6 @@ export function LoginPage({ onSwitchToSignUp }: LoginPageProps) {
             </Button>
           </form>
 
-          <button
-            type="button"
-            onClick={() => {
-              setUsername('admin');
-              setPassword('admin123');
-            }}
-            className="mt-3 w-full flex items-center justify-center gap-2 px-5 py-3 rounded-xl text-sm font-semibold cursor-pointer
-              bg-forest-50 text-forest-800 border border-forest-200
-              hover:bg-forest-100 hover:border-forest-300
-              active:scale-[0.98] transition-all duration-200"
-          >
-            Use Admin Credentials
-          </button>
-
           {/* Demo Mode */}
           <button
             onClick={demoLogin}
