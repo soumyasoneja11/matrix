@@ -3,6 +3,7 @@ package com.mediscan.controller;
 import com.mediscan.model.Patient;
 import com.mediscan.service.PatientService;
 import com.mediscan.dto.RegistrationRequest;
+import com.mediscan.dto.TriageRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -24,6 +25,12 @@ public class PatientController {
     @PostMapping("/register")
     public ResponseEntity<Patient> registerPatient(@Valid @RequestBody RegistrationRequest request) {
         Patient patient = patientService.registerPatient(request);
+        return new ResponseEntity<>(patient, HttpStatus.CREATED);
+    }
+
+    @PostMapping("/triage")
+    public ResponseEntity<Patient> triagePatient(@RequestBody TriageRequest request) {
+        Patient patient = patientService.triagePatient(request);
         return new ResponseEntity<>(patient, HttpStatus.CREATED);
     }
     

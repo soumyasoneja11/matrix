@@ -12,15 +12,28 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @AllArgsConstructor
 public class Patient {
-    
+
     @Id
     private String id;
-    
+
     private String name;
+    private Integer age;
+    private String gender;
     private String email;
     private String phoneNumber;
+    private String chiefComplaint;
     private String symptoms;
+    private String vitalSigns;
+    private Integer painLevel;
+    private String triageLevel;
+    private String status;
+    private String zoneName;
+    private String roomCode;
+    private String assignedNurse;
+    private String assignedDoctor;
     private LocalDateTime registrationDate;
     private LocalDateTime lastUpdated;
-    
+    private LocalDateTime createdAt;
+    private LocalDateTime updatedAt;
+
 }
