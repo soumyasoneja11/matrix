@@ -8,6 +8,7 @@ import com.mediscan.model.enums.PatientStatus;
 import com.mediscan.model.enums.TriagePriority;
 import com.mediscan.repository.PatientRepository;
 import com.mediscan.repository.PatientEventRepository;
+import com.mediscan.repository.UserRepository;
 import com.mediscan.exception.ResourceNotFoundException;
 import com.mediscan.service.ai.TriageExtractor;
 import com.mediscan.service.triage.TextTriageService;
@@ -23,7 +24,11 @@ import org.springframework.validation.annotation.Validated;
 
 import java.time.LocalDateTime;
 import java.util.Comparator;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 
 @Service
@@ -34,6 +39,7 @@ public class PatientService {
 
     private final PatientRepository patientRepository;
     private final PatientEventRepository eventRepository;
+    private final UserRepository userRepository;
     private final TriageExtractor triageExtractor;
     private final ResourceAllocator resourceAllocator;
     private final SimpMessagingTemplate messagingTemplate;
@@ -42,6 +48,7 @@ public class PatientService {
     @Autowired
     public PatientService(PatientRepository patientRepository,
                           PatientEventRepository eventRepository,
+                          UserRepository userRepository,
                           TriageExtractor triageExtractor,
                           ResourceAllocator resourceAllocator,
                           SimpMessagingTemplate messagingTemplate,
@@ -49,6 +56,7 @@ public class PatientService {
 
         this.patientRepository = patientRepository;
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
         this.triageExtractor = triageExtractor;
         this.resourceAllocator = resourceAllocator;
         this.messagingTemplate = messagingTemplate;
@@ -57,17 +65,27 @@ public class PatientService {
 
     // 🔵 BASIC REGISTER (NO AI)
     public Patient registerPatient(RegistrationRequest request) {
-        Patient patient = new Patient();
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        Patient patient = findExistingPatientForIntake(normalizedEmail).orElseGet(Patient::new);
+        boolean isNew = patient.getId() == null;
+        if (isNew) {
+            patient.setCreatedAt(LocalDateTime.now());
+        }
+
         patient.setName(request.getName());
-        patient.setEmail(request.getEmail());
+        patient.setEmail(normalizedEmail);
         patient.setPhoneNumber(request.getPhoneNumber());
         patient.setAge(request.getAge());
         patient.setGender(request.getGender());
         patient.setRawSymptoms(request.getSymptoms());
-        patient.setCreatedAt(LocalDateTime.now());
         patient.setUpdatedAt(LocalDateTime.now());
+        patient.setIsDeleted(false);
 
-        return patientRepository.save(patient);
+        Patient saved = patientRepository.save(patient);
+        if (!isNew) {
+            logEvent(saved, "INTAKE_UPDATE", "Existing patient intake updated", null, null, null, null);
+        }
+        return saved;
     }
 
     // 🔥 MAIN AI TRIAGE METHOD
@@ -89,38 +107,31 @@ public class PatientService {
             default -> TriagePriority.GREEN;
         };
 
-        // 4. CREATE PATIENT
-        Patient patient = Patient.builder()
-                .name(request.getName() != null ? request.getName() : "Unknown")
-                .email(request.getEmail())
-                .phoneNumber(request.getPhoneNumber())
+        String normalizedEmail = normalizeEmail(request.getEmail());
+        Optional<Patient> existingPatient = findExistingPatientForIntake(normalizedEmail);
 
-                // 🔥 FIXED (NO inferred variables)
-                .age(request.getAge() != null ? request.getAge() :
-                        (extractionResult != null ? extractionResult.getAge() : 0))
+        Patient patient = existingPatient.orElseGet(Patient::new);
+        boolean isNewPatient = patient.getId() == null;
 
-                .gender(request.getGender() != null && !request.getGender().isBlank()
-                        ? request.getGender()
-                        : (extractionResult != null ? extractionResult.getGender() : "Unknown"))
+        if (isNewPatient) {
+            patient.setCreatedAt(LocalDateTime.now());
+        }
 
-                .rawSymptoms(request.getSymptoms())
-                .extractedSymptoms(extractionResult != null
-                        ? extractionResult.getSymptoms()
-                        : new java.util.ArrayList<>())
-
-                .chiefComplaint(extractionResult != null
-                        ? extractionResult.getChiefComplaint()
-                        : "No Chief Complaint")
-
-                .vitals(extractionResult != null
-                        ? extractionResult.getVitals()
-                        : new Patient.Vitals())
-
-                .priority(priority) // 🔥 AI PRIORITY
-                .status(PatientStatus.TRIAGED)
-                .createdAt(LocalDateTime.now())
-                .updatedAt(LocalDateTime.now())
-                .build();
+        patient.setName(request.getName() != null ? request.getName() : "Unknown");
+        patient.setEmail(normalizedEmail);
+        patient.setPhoneNumber(request.getPhoneNumber());
+        patient.setAge(request.getAge() != null ? request.getAge() : (extractionResult != null ? extractionResult.getAge() : 0));
+        patient.setGender(request.getGender() != null && !request.getGender().isBlank()
+                ? request.getGender()
+                : (extractionResult != null ? extractionResult.getGender() : "Unknown"));
+        patient.setRawSymptoms(request.getSymptoms());
+        patient.setExtractedSymptoms(extractionResult != null ? extractionResult.getSymptoms() : new ArrayList<>());
+        patient.setChiefComplaint(extractionResult != null ? extractionResult.getChiefComplaint() : "No Chief Complaint");
+        patient.setVitals(extractionResult != null ? extractionResult.getVitals() : new Patient.Vitals());
+        patient.setPriority(priority);
+        patient.setStatus(PatientStatus.TRIAGED);
+        patient.setIsDeleted(false);
+        patient.setUpdatedAt(LocalDateTime.now());
 
         Patient savedPatient = patientRepository.save(patient);
 
@@ -130,8 +141,8 @@ public class PatientService {
 
         // 6. AUDIT LOG
         logEvent(savedPatient,
-                "INTAKE",
-                "New patient intake and AI triage completed",
+                isNewPatient ? "INTAKE" : "INTAKE_UPDATE",
+                isNewPatient ? "New patient intake and AI triage completed" : "Existing patient revisit triage completed",
                 null,
                 PatientStatus.TRIAGED,
                 null,
@@ -156,11 +167,72 @@ public class PatientService {
         return patientRepository.findById(id);
     }
 
+    public Patient requirePatientById(@NotNull String id) {
+        return patientRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+    }
+
+    public List<Patient> searchPatients(String query) {
+        List<Patient> activePatients = getActivePatients();
+        if (query == null || query.isBlank()) {
+            return activePatients;
+        }
+
+        String needle = query.toLowerCase(Locale.ROOT);
+        return activePatients.stream()
+                .filter(patient ->
+                        containsIgnoreCase(patient.getName(), needle)
+                                || containsIgnoreCase(patient.getEmail(), needle)
+                                || containsIgnoreCase(patient.getPhoneNumber(), needle)
+                                || containsIgnoreCase(patient.getChiefComplaint(), needle))
+                .toList();
+    }
+
+    public List<Map<String, Object>> getAllPatientHistoryRecords() {
+        return patientRepository.findAll().stream()
+                .filter(p -> !Boolean.TRUE.equals(p.getIsDeleted()))
+                .map(this::buildHistoryRecord)
+                .toList();
+    }
+
+    public Map<String, Object> getPatientHistoryRecordById(String patientId) {
+        Patient patient = requirePatientById(patientId);
+        return buildHistoryRecord(patient);
+    }
+
+    public List<Patient> getWorklistForUser(String username) {
+        List<Patient> activePatients = getActivePatients();
+        var user = userRepository.findByUsername(username).orElse(null);
+        if (user == null || user.getRole() == null) {
+            return activePatients;
+        }
+
+        String role = user.getRole().name();
+        String fullName = user.getFullName() != null ? user.getFullName() : username;
+
+        if ("DOCTOR".equals(role)) {
+            List<Patient> doctorAssigned = activePatients.stream()
+                    .filter(p -> matchesAssignee(p.getAssignedDoctorId(), username)
+                            || matchesAssignee(p.getAssignedStaff(), fullName))
+                    .toList();
+            return doctorAssigned.isEmpty() ? activePatients : doctorAssigned;
+        }
+
+        if ("NURSE".equals(role)) {
+            List<Patient> nurseAssigned = activePatients.stream()
+                    .filter(p -> matchesAssignee(p.getAssignedNurseId(), username)
+                            || matchesAssignee(p.getAssignedStaff(), fullName))
+                    .toList();
+            return nurseAssigned.isEmpty() ? activePatients : nurseAssigned;
+        }
+
+        return activePatients;
+    }
+
     // 🔴 DELETE
     @Transactional
     public void softDelete(@NotNull String id) {
-        Patient patient = patientRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+        Patient patient = requirePatientById(id);
 
         patient.setIsDeleted(true);
         patientRepository.save(patient);
@@ -174,6 +246,60 @@ public class PatientService {
                 null);
 
         broadcastUpdate(patient);
+    }
+
+    @Transactional
+    public Patient restore(@NotNull String id) {
+        Patient patient = requirePatientById(id);
+        patient.setIsDeleted(false);
+        patient.setUpdatedAt(LocalDateTime.now());
+
+        Patient saved = patientRepository.save(patient);
+        logEvent(saved, "RESTORE", "Patient restored from recycle bin", null, null, null, null);
+        broadcastUpdate(saved);
+        return saved;
+    }
+
+    @Transactional
+    public void permanentDelete(@NotNull String id) {
+        Patient patient = requirePatientById(id);
+        patientRepository.deleteById(id);
+        log.info("Permanently deleted patient {}", patient.getId());
+    }
+
+    @Transactional
+    public Patient updatePatient(@NotNull String id, @NotNull Patient updates) {
+        Patient patient = requirePatientById(id);
+
+        if (updates.getName() != null && !updates.getName().isBlank()) patient.setName(updates.getName().trim());
+        if (updates.getEmail() != null) patient.setEmail(updates.getEmail().trim());
+        if (updates.getPhoneNumber() != null && !updates.getPhoneNumber().isBlank()) patient.setPhoneNumber(updates.getPhoneNumber().trim());
+        if (updates.getAge() != null) patient.setAge(updates.getAge());
+        if (updates.getGender() != null) patient.setGender(updates.getGender().trim());
+        if (updates.getRawSymptoms() != null) patient.setRawSymptoms(updates.getRawSymptoms());
+        if (updates.getChiefComplaint() != null) patient.setChiefComplaint(updates.getChiefComplaint());
+        if (updates.getDescription() != null) patient.setDescription(updates.getDescription());
+        if (updates.getExtractedSymptoms() != null) patient.setExtractedSymptoms(updates.getExtractedSymptoms());
+        if (updates.getStatus() != null) patient.setStatus(updates.getStatus());
+        if (updates.getPriority() != null) patient.setPriority(updates.getPriority());
+        if (updates.getVitals() != null) patient.setVitals(updates.getVitals());
+
+        patient.setUpdatedAt(LocalDateTime.now());
+        Patient saved = patientRepository.save(patient);
+        broadcastUpdate(saved);
+        return saved;
+    }
+
+    @Transactional
+    public Patient updateTriageLevel(@NotNull String id, String level) {
+        Patient patient = requirePatientById(id);
+        patient.setPriority(mapTriageLevel(level));
+        patient.setUpdatedAt(LocalDateTime.now());
+
+        Patient saved = patientRepository.save(patient);
+        logEvent(saved, "TRIAGE_UPDATE", "Triage level updated", null, null, null, saved.getPriority());
+        broadcastUpdate(saved);
+        return saved;
     }
 
     // 🧾 EVENTS
@@ -222,6 +348,99 @@ public class PatientService {
             case YELLOW -> 2;
             case GREEN -> 3;
             case BLUE -> 4;
+        };
+    }
+
+    private boolean containsIgnoreCase(String value, String needleLower) {
+        return value != null && value.toLowerCase(Locale.ROOT).contains(needleLower);
+    }
+
+    private Map<String, Object> buildHistoryRecord(Patient patient) {
+        Map<String, Object> record = new HashMap<>();
+        record.put("id", patient.getId());
+        record.put("name", patient.getName());
+        record.put("age", patient.getAge());
+        record.put("gender", patient.getGender());
+        record.put("contactPhone", patient.getPhoneNumber());
+        record.put("contactEmail", patient.getEmail());
+        record.put("visits", buildVisitEntries(patient));
+        return record;
+    }
+
+    private List<Map<String, Object>> buildVisitEntries(Patient patient) {
+        List<Map<String, Object>> visits = new ArrayList<>();
+        List<PatientEvent> events = eventRepository.findByPatientIdOrderByCreatedAtDesc(patient.getId());
+        for (PatientEvent event : events) {
+            visits.add(buildVisit(patient, event.getId(), event.getCreatedAt(), event.getDescription()));
+        }
+        if (visits.isEmpty()) {
+            String fallbackId = "initial-" + patient.getId();
+            visits.add(buildVisit(patient, fallbackId, patient.getUpdatedAt(), patient.getDescription()));
+        }
+        return visits;
+    }
+
+    private Map<String, Object> buildVisit(Patient patient, String visitId, LocalDateTime visitDate, String notes) {
+        Map<String, Object> visit = new HashMap<>();
+        visit.put("id", visitId);
+        visit.put("date", visitDate != null ? visitDate : patient.getCreatedAt());
+        visit.put("complaint", nonBlank(patient.getChiefComplaint(), patient.getRawSymptoms(), "Clinical visit"));
+        visit.put("symptoms", patient.getExtractedSymptoms() != null ? patient.getExtractedSymptoms() : List.of());
+        visit.put("vitals", patient.getVitals());
+        visit.put("triageLevel", patient.getDisplayPriority());
+        visit.put("assignedDoctor", patient.getAssignedDoctorId());
+        visit.put("assignedNurse", patient.getAssignedNurseId());
+        visit.put("department", nonBlank(patient.getLocation(), "Emergency Department"));
+        visit.put("medicines", List.of());
+        visit.put("procedures", List.of());
+        visit.put("notes", nonBlank(notes, patient.getDescription(), "Clinical record update"));
+        visit.put("status", mapHistoryStatus(patient.getStatus() != null ? patient.getStatus().name() : null));
+        return visit;
+    }
+
+    private String mapHistoryStatus(String status) {
+        if (status == null) return "completed";
+        return switch (status) {
+            case "TRIAGED", "IN_TREATMENT", "OBSERVATION" -> "ongoing";
+            case "DISCHARGED" -> "completed";
+            default -> "follow-up";
+        };
+    }
+
+    private String nonBlank(String... values) {
+        for (String value : values) {
+            if (value != null && !value.isBlank()) return value;
+        }
+        return "";
+    }
+
+    private boolean matchesAssignee(String fieldValue, String expected) {
+        if (fieldValue == null || expected == null) return false;
+        return fieldValue.trim().equalsIgnoreCase(expected.trim());
+    }
+
+    private Optional<Patient> findExistingPatientForIntake(String normalizedEmail) {
+        if (normalizedEmail == null || normalizedEmail.isBlank()) {
+            return Optional.empty();
+        }
+        return patientRepository.findByEmail(normalizedEmail);
+    }
+
+    private String normalizeEmail(String email) {
+        if (email == null) return null;
+        String trimmed = email.trim();
+        return trimmed.isBlank() ? null : trimmed.toLowerCase(Locale.ROOT);
+    }
+
+    private TriagePriority mapTriageLevel(String level) {
+        if (level == null) return TriagePriority.GREEN;
+
+        String normalized = level.trim().toUpperCase(Locale.ROOT);
+        return switch (normalized) {
+            case "CRITICAL", "RED" -> TriagePriority.RED;
+            case "URGENT", "ORANGE", "YELLOW" -> TriagePriority.YELLOW;
+            case "STANDARD", "GREEN", "BLUE" -> TriagePriority.GREEN;
+            default -> TriagePriority.GREEN;
         };
     }
 }

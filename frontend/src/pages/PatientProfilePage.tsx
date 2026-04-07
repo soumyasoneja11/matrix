@@ -1,25 +1,62 @@
 import { useParams, useNavigate } from 'react-router-dom';
-import { useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { FaCalendarCheck, FaExclamationTriangle } from 'react-icons/fa';
 import { ArrowLeft, UserX } from 'lucide-react';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientHistoryHeader from '../components/PatientHistory/PatientHistoryHeader';
 import PatientTimeline from '../components/PatientHistory/PatientTimeline';
-import { PATIENT_HISTORY_DATA } from '../data/patientHistoryData';
+import { historyAPI, PatientHistoryRecordApi } from '../services/api';
+import { PatientHistoryRecord, TriageLevel } from '../types';
 
 const PatientProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const [patient, setPatient] = useState<PatientHistoryRecordApi | null>(null);
+  const mappedPatient: PatientHistoryRecord | null = patient
+    ? {
+        ...patient,
+        visits: (patient.visits || []).map((visit) => ({
+          ...visit,
+          triageLevel:
+            visit.triageLevel === 'CRITICAL'
+              ? TriageLevel.CRITICAL
+              : visit.triageLevel === 'URGENT'
+                ? TriageLevel.URGENT
+                : TriageLevel.STANDARD,
+        })),
+      }
+    : null;
+  const [loading, setLoading] = useState(true);
 
-  const patient = useMemo(() => {
-    return PATIENT_HISTORY_DATA.find(p => p.id === id) || null;
+  useEffect(() => {
+    const load = async () => {
+      if (!id) return;
+      try {
+        setLoading(true);
+        const data = await historyAPI.getById(id);
+        setPatient(data.data || null);
+      } catch {
+        setPatient(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+    load();
   }, [id]);
 
+  if (loading) {
+    return (
+      <div className="flex justify-center py-16">
+        <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin" />
+      </div>
+    );
+  }
+
   // ── 404: Patient Not Found ──
-  if (!patient) {
+  if (!mappedPatient) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
         <motion.div
@@ -77,7 +114,7 @@ const PatientProfilePage = () => {
 
       {/* Patient Header with QR */}
       <PatientHistoryHeader
-        patient={patient}
+        patient={mappedPatient}
         onClose={() => navigate('/patient-history')}
       />
 
@@ -92,11 +129,11 @@ const PatientProfilePage = () => {
             <FaCalendarCheck size={16} className={isLight ? 'text-[#247B7B]' : 'text-primary-400'} />
             Visit History
             <span className={`text-xs font-normal ml-1 ${isLight ? 'text-gray-400' : 'text-white/40'}`}>
-              ({patient.visits.length} records)
+              ({mappedPatient.visits.length} records)
             </span>
           </h3>
         </motion.div>
-        <PatientTimeline visits={patient.visits} />
+        <PatientTimeline visits={mappedPatient.visits} />
       </div>
     </div>
   );

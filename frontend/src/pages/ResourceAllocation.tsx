@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   FaBed,
@@ -14,13 +14,15 @@ import {
 import AnalyticsCard from '../components/AnalyticsCard';
 import ZoneForm from '../components/ZoneForm';
 import RoomForm from '../components/RoomForm';
-import { DEMO_ZONES, DEMO_ROOMS } from '../utils/mockData';
 import { useTheme } from '../hooks/contexts/ThemeContext';
+import { Room, TriageLevel, Zone } from '../types';
+import { resourceAPI } from '../services/api';
 
 const ResourceAllocation = () => {
-  const [zones, setZones] = useState(DEMO_ZONES);
-  const [rooms, setRooms] = useState(DEMO_ROOMS);
-  const [showError, setShowError] = useState(true);
+  const [zones, setZones] = useState<Zone[]>([]);
+  const [rooms, setRooms] = useState<Room[]>([]);
+  const [showError, setShowError] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
   const [zoneSuccess, setZoneSuccess] = useState('');
   const [roomSuccess, setRoomSuccess] = useState('');
   const { theme } = useTheme();
@@ -30,45 +32,69 @@ const ResourceAllocation = () => {
   const trackedRooms = rooms.length;
   const availableNow = rooms.filter((r) => !r.occupied).length;
 
-  const resources = [
-    { icon: FaBed, name: 'ICU Beds', available: 8, total: 15, color: 'from-red-500 to-pink-500' },
-    { icon: FaLungs, name: 'Ventilators', available: 12, total: 20, color: 'from-blue-500 to-cyan-500' },
-    { icon: FaSyringe, name: 'Emergency Kits', available: 45, total: 50, color: 'from-green-500 to-emerald-500' },
-    { icon: FaAmbulance, name: 'Ambulances', available: 3, total: 5, color: 'from-yellow-500 to-orange-500' },
-  ];
+  const resources = useMemo(() => [
+    { icon: FaBed, name: 'Tracked Rooms', available: availableNow, total: Math.max(trackedRooms, 1), color: 'from-red-500 to-pink-500' },
+    { icon: FaLungs, name: 'Available Rooms', available: availableNow, total: Math.max(trackedRooms, 1), color: 'from-blue-500 to-cyan-500' },
+    { icon: FaSyringe, name: 'Occupied Rooms', available: trackedRooms - availableNow, total: Math.max(trackedRooms, 1), color: 'from-green-500 to-emerald-500' },
+    { icon: FaAmbulance, name: 'Care Zones', available: activeZones, total: Math.max(activeZones, 1), color: 'from-yellow-500 to-orange-500' },
+  ], [activeZones, trackedRooms, availableNow]);
 
-  const handleCreateZone = (data: { name: string; severityBand: string; description: string }) => {
-    const triageMap: Record<string, 'CRITICAL' | 'URGENT' | 'STANDARD'> = {
-      RED: 'CRITICAL',
-      YELLOW: 'URGENT',
-      GREEN: 'STANDARD',
-    };
-    const newZone = {
-      id: String(Date.now()),
-      name: data.name,
-      severityBand: triageMap[data.severityBand] || 'STANDARD',
-      description: data.description,
-    };
-    setZones((prev) => [...prev, newZone]);
-    setZoneSuccess(`Zone "${data.name}" created successfully!`);
-    setTimeout(() => setZoneSuccess(''), 4000);
+  const mapSeverityToBand = (severity: string): Zone['severityBand'] => {
+    const normalized = severity.toUpperCase();
+    if (normalized === 'RED') return TriageLevel.CRITICAL;
+    if (normalized === 'YELLOW') return TriageLevel.URGENT;
+    return TriageLevel.STANDARD;
   };
 
-  const handleAddRoom = (data: { zoneId: string; roomCode: string; capacity: number }) => {
+  const reloadResources = async () => {
+    try {
+      const [liveZones, liveRooms] = await Promise.all([
+        resourceAPI.getZones(),
+        resourceAPI.getRooms(),
+      ]);
+      setZones(liveZones);
+      setRooms(liveRooms);
+      setShowError(false);
+      setErrorMessage('');
+    } catch (err: any) {
+      setShowError(true);
+      setErrorMessage(err?.message || 'Unable to sync resource capacity from backend.');
+    }
+  };
+
+  useEffect(() => {
+    reloadResources();
+  }, []);
+
+  const handleCreateZone = async (data: { name: string; severityBand: string; description: string }) => {
+    try {
+      const createdZone = await resourceAPI.createZone({
+        name: data.name,
+        severityBand: mapSeverityToBand(data.severityBand),
+        description: data.description,
+      });
+      setZones((prev) => [...prev, createdZone]);
+      setZoneSuccess(`Zone "${data.name}" created successfully!`);
+      setShowError(false);
+      setTimeout(() => setZoneSuccess(''), 4000);
+    } catch (err: any) {
+      setShowError(true);
+      setErrorMessage(err?.message || 'Unable to create zone. Please retry.');
+    }
+  };
+
+  const handleAddRoom = async (data: { zoneId: string; roomCode: string; capacity: number }) => {
     const targetZone = zones.find((z) => z.id === data.zoneId);
     if (!targetZone) return;
-
-    const newRoom = {
-      id: String(Date.now()),
-      roomCode: data.roomCode,
-      zoneId: data.zoneId,
-      zoneName: targetZone.name,
-      equipment: [] as string[],
-      occupied: false,
-    };
-    setRooms((prev) => [...prev, newRoom]);
-    setRoomSuccess(`Room "${data.roomCode}" added to ${targetZone.name}!`);
-    setTimeout(() => setRoomSuccess(''), 4000);
+    try {
+      await resourceAPI.createRoom(data);
+      await reloadResources();
+      setRoomSuccess(`Room "${data.roomCode}" added to ${targetZone.name}!`);
+      setTimeout(() => setRoomSuccess(''), 4000);
+    } catch (err: any) {
+      setShowError(true);
+      setErrorMessage(err?.message || 'Unable to create room. Please retry.');
+    }
   };
 
   const severityColors: Record<string, string> = {
@@ -137,13 +163,13 @@ const ResourceAllocation = () => {
             <div>
               <p className={`text-sm font-semibold ${isLight ? 'text-red-700' : 'text-red-300'}`}>Server error: 403</p>
               <p className={`text-xs mt-0.5 ${isLight ? 'text-red-500/70' : 'text-white/50'}`}>
-                Capacity data could not be fetched. Some metrics may be stale.
+                {errorMessage || 'Capacity data could not be fetched. Some metrics may be stale.'}
               </p>
             </div>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             <button
-              onClick={() => setShowError(false)}
+              onClick={reloadResources}
               className="btn-primary text-sm flex items-center gap-2 py-2"
             >
               <FaSyncAlt />
@@ -217,51 +243,6 @@ const ResourceAllocation = () => {
                 </div>
               </motion.div>
             ))}
-
-            <AnimatePresence>
-              {zones.map((zone, idx) => (
-                <motion.div
-                  key={zone.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.9 }}
-                  transition={{ delay: 0.4 + idx * 0.05 }}
-                  layout
-                  className="glass-card p-5 hover-lift"
-                >
-                  <div className="flex items-start justify-between mb-3">
-                    <div
-                      className={`w-10 h-10 rounded-xl bg-gradient-to-r ${
-                        severityColors[zone.severityBand] || 'from-gray-500 to-gray-600'
-                      } flex items-center justify-center shadow-lg`}
-                    >
-                      <FaMapMarkerAlt className="text-white text-sm" />
-                    </div>
-                    <span
-                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                        severityBadgeClass[zone.severityBand] || ''
-                      }`}
-                    >
-                      {zone.severityBand}
-                    </span>
-                  </div>
-                  <h3 className="font-bold text-base theme-text">{zone.name}</h3>
-                  <p className={`text-xs mt-1 leading-relaxed line-clamp-2 ${isLight ? 'text-[#6b7e7e]' : 'text-white/50'}`}>
-                    {zone.description}
-                  </p>
-                  <div className={`mt-3 pt-3 border-t flex items-center justify-between text-xs ${
-                    isLight ? 'border-[#e8e2d9] text-[#94a3a3]' : 'border-white/10 text-white/40'
-                  }`}>
-                    <span>
-                      {rooms.filter((r) => r.zoneId === zone.id).length} rooms
-                    </span>
-                    <span>
-                      {rooms.filter((r) => r.zoneId === zone.id && r.occupied).length} occupied
-                    </span>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
 
           </div>
         )}

@@ -1,5 +1,5 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
-import { Patient, TriageRequest, Staff } from '../types';
+import { Patient, TriageRequest, Staff, Zone, Room } from '../types';
 import { TriageLevel } from '../types';
 
 // Standardized API Response interface matching backend
@@ -13,6 +13,37 @@ export interface ApiResponse<T> {
 export interface ApiClientError extends Error {
   status?: number;
   details?: unknown;
+}
+
+export interface PatientHistoryVisitApi {
+  id: string;
+  date: string;
+  complaint: string;
+  symptoms: string[];
+  vitals?: {
+    heartRate?: number;
+    bloodPressure?: string;
+    temperature?: number;
+    oxygenSaturation?: number;
+  };
+  triageLevel: string;
+  assignedDoctor?: string;
+  assignedNurse?: string;
+  department?: string;
+  medicines?: string[];
+  procedures?: string[];
+  notes?: string;
+  status: 'completed' | 'ongoing' | 'follow-up';
+}
+
+export interface PatientHistoryRecordApi {
+  id: string;
+  name: string;
+  age?: number;
+  gender?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  visits: PatientHistoryVisitApi[];
 }
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8080/api';
@@ -64,6 +95,57 @@ const sortPatients = (patients: Patient[]): Patient[] => {
 
     return (a.name || '').localeCompare(b.name || '');
   });
+};
+
+const PRIORITY_TO_BAND: Record<string, Zone['severityBand']> = {
+  RED: TriageLevel.CRITICAL,
+  ORANGE: TriageLevel.CRITICAL,
+  YELLOW: TriageLevel.URGENT,
+  GREEN: TriageLevel.STANDARD,
+  BLUE: TriageLevel.STANDARD,
+};
+
+const BAND_TO_PRIORITY: Record<Zone['severityBand'], string> = {
+  [TriageLevel.CRITICAL]: 'RED',
+  [TriageLevel.URGENT]: 'YELLOW',
+  [TriageLevel.STANDARD]: 'GREEN',
+};
+
+const normalizeZone = (raw: any): Zone => {
+  const backendPriority = (raw?.priorityBand || '').toString().toUpperCase();
+  return {
+    id: String(raw?.id ?? ''),
+    name: raw?.name ?? 'Unknown Zone',
+    severityBand: PRIORITY_TO_BAND[backendPriority] ?? TriageLevel.STANDARD,
+    description: raw?.description ?? '',
+  };
+};
+
+const normalizeRoom = (raw: any, zoneById: Map<string, Zone>): Room => {
+  const zone = zoneById.get(String(raw?.zoneId ?? ''));
+  return {
+    id: String(raw?.id ?? ''),
+    roomCode: raw?.roomCode ?? 'N/A',
+    zoneId: String(raw?.zoneId ?? ''),
+    zoneName: zone?.name ?? 'Unknown Zone',
+    equipment: Array.isArray(raw?.equipment) ? raw.equipment : [],
+    occupied: Boolean(raw?.isOccupied ?? raw?.occupied),
+    patientId: raw?.currentPatientId ?? raw?.patientId,
+  };
+};
+
+const normalizeStaff = (raw: any): Staff => {
+  const role = typeof raw?.role === 'string' ? raw.role.toUpperCase() : 'NURSE';
+  const status = raw?.active === false ? 'offline' : 'ACTIVE';
+  return {
+    id: String(raw?.id ?? ''),
+    fullName: raw?.fullName ?? raw?.username ?? 'Unnamed Staff',
+    username: raw?.username ?? '',
+    email: raw?.email ?? '',
+    role,
+    department: raw?.department ?? 'GENERAL_MEDICINE',
+    status,
+  };
 };
 
 const api = axios.create({
@@ -132,7 +214,15 @@ export const patientAPI = {
   },
   search: (query: string) => api.get<Patient[]>(`/patients/search?q=${encodeURIComponent(query)}`),
   triage: async (data: TriageRequest) => {
-    const response = await api.post<any>('/patients/triage', data);
+    const payload = {
+      name: data.name?.trim() || 'Walk-in Patient',
+      phoneNumber: data.phoneNumber?.trim() || 'N/A',
+      email: data.email?.trim() || undefined,
+      age: data.age,
+      gender: data.gender?.trim() || undefined,
+      symptoms: data.symptoms?.trim() || data.patientDetails?.trim() || '',
+    };
+    const response = await api.post<any>('/patients/triage', payload);
     return normalizePatient(response.data);
   },
   updateTriageLevel: (id: string, level: string) =>
@@ -152,12 +242,57 @@ export const fetchPatients = async (): Promise<Patient[]> => {
 };
 
 export const staffAPI = {
-  getAll: () => api.get<Staff[]>('/staff'),
-  getById: (id: string) => api.get<Staff>(`/staff/${id}`),
-  create: (data: Partial<Staff>) => api.post<Staff>('/staff', data),
-  update: (id: string, data: Partial<Staff>) => api.put<Staff>(`/staff/${id}`, data),
+  getAll: async (): Promise<Staff[]> => {
+    const response = await api.get<any[]>('/staff');
+    return (response.data || []).map(normalizeStaff);
+  },
+  getById: async (id: string): Promise<Staff> => {
+    const response = await api.get<any>(`/staff/${id}`);
+    return normalizeStaff(response.data);
+  },
+  create: async (data: Partial<Staff>) => {
+    const response = await api.post<any>('/staff', data);
+    return normalizeStaff(response.data);
+  },
+  update: async (id: string, data: Partial<Staff>) => {
+    const response = await api.put<any>(`/staff/${id}`, data);
+    return normalizeStaff(response.data);
+  },
   remove: (id: string) => api.delete(`/staff/${id}`),
   getAssignments: () => api.get('/staff/assignments'),
+};
+
+export const resourceAPI = {
+  getZones: async (): Promise<Zone[]> => {
+    const response = await api.get<any[]>('/resources/zones');
+    return (response.data || []).map(normalizeZone);
+  },
+  getRooms: async (): Promise<Room[]> => {
+    const [zonesResponse, roomsResponse] = await Promise.all([
+      api.get<any[]>('/resources/zones'),
+      api.get<any[]>('/resources/rooms'),
+    ]);
+    const zones = (zonesResponse.data || []).map(normalizeZone);
+    const zoneById = new Map(zones.map(z => [z.id, z]));
+    return (roomsResponse.data || []).map((room: any) => normalizeRoom(room, zoneById));
+  },
+  createZone: async (payload: { name: string; severityBand: Zone['severityBand']; description: string }) => {
+    const backendPayload = {
+      name: payload.name.trim(),
+      description: payload.description,
+      priorityBand: BAND_TO_PRIORITY[payload.severityBand] ?? 'GREEN',
+    };
+    const response = await api.post<any>('/resources/zones', backendPayload);
+    return normalizeZone(response.data);
+  },
+  createRoom: async (payload: { zoneId: string; roomCode: string; capacity: number }) => {
+    const response = await api.post<any>('/resources/rooms', {
+      zoneId: payload.zoneId,
+      roomCode: payload.roomCode.trim(),
+      capacity: payload.capacity,
+    });
+    return response.data;
+  },
 };
 
 export const createPatient = async (data: TriageRequest): Promise<Patient> => {
@@ -174,7 +309,19 @@ export const deletePatient = async (id: string): Promise<void> => {
 };
 
 export const worklistAPI = {
-  getMyWorklist: () => api.get<Patient[]>('/patients/my-worklist'),
+  getMyWorklist: async (): Promise<Patient[]> => {
+    const response = await api.get<any[]>('/patients/my-worklist');
+    return sortPatients((response.data || []).map(normalizePatient));
+  },
+  updateStatus: async (id: string, status: string): Promise<Patient> => {
+    const response = await api.put<any>(`/patients/${id}`, { status });
+    return normalizePatient(response.data);
+  },
+};
+
+export const historyAPI = {
+  getAll: () => api.get<PatientHistoryRecordApi[]>('/patients/history'),
+  getById: (id: string) => api.get<PatientHistoryRecordApi>(`/patients/history/${id}`),
 };
 
 export const authAPI = {
