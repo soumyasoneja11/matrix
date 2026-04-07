@@ -1,5 +1,5 @@
-import { useState, useEffect } from 'react';
-import { FaMicrophone, FaStop, FaSpinner } from 'react-icons/fa';
+import { useEffect, useRef, useState } from 'react';
+import { FaMicrophone, FaSpinner } from 'react-icons/fa';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 
@@ -11,7 +11,9 @@ interface VoiceCaptureButtonProps {
 const VoiceCaptureButton: React.FC<VoiceCaptureButtonProps> = ({ onTranscript, language = 'en-US' }) => {
   const [isListening, setIsListening] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
-  const [recognition, setRecognition] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const recognitionRef = useRef<any>(null);
+  const shouldKeepListeningRef = useRef(false);
   const { theme } = useTheme();
   const isLight = theme === 'light';
 
@@ -19,49 +21,88 @@ const VoiceCaptureButton: React.FC<VoiceCaptureButtonProps> = ({ onTranscript, l
     if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
       const SpeechRecognition = (window as any).webkitSpeechRecognition || (window as any).SpeechRecognition;
       const recognitionInstance = new SpeechRecognition();
-      recognitionInstance.continuous = false;
-      recognitionInstance.interimResults = false;
+      recognitionInstance.continuous = true;
+      recognitionInstance.interimResults = true;
       recognitionInstance.lang = language;
-      
+
       recognitionInstance.onresult = (event: any) => {
-        const transcript = event.results[0][0].transcript;
+        let finalTranscript = '';
+        for (let i = event.resultIndex; i < event.results.length; i += 1) {
+          const result = event.results[i];
+          if (result.isFinal && result[0]?.transcript) {
+            finalTranscript += `${result[0].transcript} `;
+          }
+        }
+
+        if (!finalTranscript.trim()) {
+          return;
+        }
+
         setIsProcessing(true);
-        onTranscript(transcript);
+        onTranscript(finalTranscript.trim());
         setTimeout(() => {
           setIsProcessing(false);
-          setIsListening(false);
         }, 500);
       };
-      
-      recognitionInstance.onerror = () => {
+
+      recognitionInstance.onerror = (event: any) => {
+        if (event?.error === 'aborted') {
+          return;
+        }
+        if (event?.error === 'no-speech') {
+          // Keep listening for user speech instead of failing immediately.
+          return;
+        }
+        setError(`Voice input failed: ${event?.error || 'unknown-error'}`);
+        shouldKeepListeningRef.current = false;
         setIsListening(false);
         setIsProcessing(false);
       };
-      
+
       recognitionInstance.onend = () => {
+        if (shouldKeepListeningRef.current) {
+          try {
+            recognitionInstance.start();
+            return;
+          } catch {
+            // Browser may throw if restarted too quickly.
+          }
+        }
         setIsListening(false);
       };
-      
-      setRecognition(recognitionInstance);
+
+      recognitionRef.current = recognitionInstance;
     }
-    
+
     return () => {
-      if (recognition) {
-        recognition.abort();
+      shouldKeepListeningRef.current = false;
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
       }
     };
   }, [language]);
 
   const toggleListening = () => {
+    const recognition = recognitionRef.current;
+    if (!recognition) {
+      setError('Speech recognition is not supported in this browser. Use Chrome or Edge.');
+      return;
+    }
+
     if (isListening) {
-      recognition?.abort();
+      shouldKeepListeningRef.current = false;
+      recognition.abort();
       setIsListening(false);
     } else {
       try {
-        recognition?.start();
+        setError(null);
+        shouldKeepListeningRef.current = true;
+        recognition.lang = language;
+        recognition.start();
         setIsListening(true);
       } catch (error) {
         console.error('Speech recognition error:', error);
+        setError('Could not start microphone. Allow mic permission and try again.');
       }
     }
   };
@@ -123,6 +164,10 @@ const VoiceCaptureButton: React.FC<VoiceCaptureButtonProps> = ({ onTranscript, l
       
       {isListening && (
         <div className="absolute inset-0 rounded-xl voice-pulse" />
+      )}
+
+      {error && (
+        <div className="mt-2 text-xs text-red-300">{error}</div>
       )}
     </motion.button>
   );

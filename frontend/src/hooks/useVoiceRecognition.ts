@@ -22,6 +22,8 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}): Voic
   const [isListening, setIsListening] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const recognitionRef = useRef<any>(null);
+  const shouldKeepListeningRef = useRef(false);
+  const finalTranscriptRef = useRef('');
 
   const SpeechRecognition =
     (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
@@ -29,8 +31,9 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}): Voic
 
   useEffect(() => {
     return () => {
+      shouldKeepListeningRef.current = false;
       if (recognitionRef.current) {
-        recognitionRef.current.stop();
+        recognitionRef.current.abort();
       }
     };
   }, []);
@@ -41,48 +44,77 @@ export function useVoiceRecognition(options: VoiceRecognitionOptions = {}): Voic
       return;
     }
 
+    if (isListening) {
+      return;
+    }
+
     setError(null);
+    shouldKeepListeningRef.current = true;
     const recognition = new SpeechRecognition();
     recognition.lang = language;
     recognition.continuous = continuous;
     recognition.interimResults = interimResults;
 
     recognition.onresult = (event: any) => {
-      let finalTranscript = '';
       let interimTranscript = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const result = event.results[i];
         if (result.isFinal) {
-          finalTranscript += result[0].transcript + ' ';
+          finalTranscriptRef.current += `${result[0].transcript} `;
         } else {
           interimTranscript += result[0].transcript;
         }
       }
-      setTranscript((prev) => prev + finalTranscript);
+
+      const mergedTranscript = `${finalTranscriptRef.current}${interimTranscript}`.trim();
+      setTranscript(mergedTranscript);
     };
 
     recognition.onerror = (event: any) => {
+      if (event?.error === 'aborted') {
+        return;
+      }
+      if (event?.error === 'no-speech') {
+        return;
+      }
       setError(`Recognition error: ${event.error}`);
+      shouldKeepListeningRef.current = false;
       setIsListening(false);
     };
 
     recognition.onend = () => {
+      if (shouldKeepListeningRef.current) {
+        try {
+          recognition.start();
+          return;
+        } catch {
+          // Browser may throw if restarted too quickly.
+        }
+      }
       setIsListening(false);
     };
 
     recognitionRef.current = recognition;
-    recognition.start();
-    setIsListening(true);
-  }, [isSupported, language, continuous, interimResults]);
-
-  const stopListening = useCallback(() => {
-    if (recognitionRef.current) {
-      recognitionRef.current.stop();
+    try {
+      recognition.start();
+      setIsListening(true);
+    } catch {
+      setError('Could not start voice recognition. Check microphone permissions.');
+      shouldKeepListeningRef.current = false;
       setIsListening(false);
     }
+  }, [isSupported, language, continuous, interimResults, isListening]);
+
+  const stopListening = useCallback(() => {
+    shouldKeepListeningRef.current = false;
+    if (recognitionRef.current) {
+      recognitionRef.current.stop();
+    }
+    setIsListening(false);
   }, []);
 
   const resetTranscript = useCallback(() => {
+    finalTranscriptRef.current = '';
     setTranscript('');
   }, []);
 
