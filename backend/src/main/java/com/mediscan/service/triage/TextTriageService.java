@@ -1,12 +1,16 @@
 package com.mediscan.service.triage;
 
 import com.mediscan.service.triage.ml.*;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
 
 @Service
 public class TextTriageService {
+
+    private static final Logger log = LoggerFactory.getLogger(TextTriageService.class);
 
     private TriageModel model;
     private TextVectorizer vectorizer;
@@ -32,14 +36,23 @@ public class TextTriageService {
             Trainer t = new Trainer();
             t.train(model, data);
 
-            System.out.println("🔥 TEXT MODEL TRAINED");
+            log.info("Text triage model trained successfully");
 
         } catch (Exception e) {
-            e.printStackTrace();
+            log.error("Text triage model training failed; using keyword fallback", e);
+            model = null;
+            vectorizer = null;
         }
     }
 
     public String predict(String input) {
+        if (input == null || input.isBlank()) {
+            return "STANDARD";
+        }
+
+        if (vectorizer == null || model == null) {
+            return predictByKeywordFallback(input);
+        }
 
         double[] v = vectorizer.vectorize(input);
         int r = model.predict(v);
@@ -49,5 +62,23 @@ public class TextTriageService {
             case 1 -> "URGENT";
             default -> "STANDARD";
         };
+    }
+
+    private String predictByKeywordFallback(String input) {
+        String normalized = input.toLowerCase(Locale.ROOT);
+        if (containsAny(normalized, "unconscious", "cardiac arrest", "no pulse", "severe bleeding", "stroke")) {
+            return "CRITICAL";
+        }
+        if (containsAny(normalized, "chest pain", "shortness of breath", "high fever", "fracture", "vomiting")) {
+            return "URGENT";
+        }
+        return "STANDARD";
+    }
+
+    private boolean containsAny(String source, String... tokens) {
+        for (String token : tokens) {
+            if (source.contains(token)) return true;
+        }
+        return false;
     }
 }

@@ -47,6 +47,19 @@ public class Patient {
     
     private Vitals vitals;
     
+    public String getDisplayPriority() {
+        if (this.priority == null) {
+            return "STANDARD";
+        }
+        if (this.priority == TriagePriority.RED) {
+            return "CRITICAL";
+        }
+        if (this.priority == TriagePriority.ORANGE || this.priority == TriagePriority.YELLOW) {
+            return "URGENT";
+        }
+        return "STANDARD";
+    }
+
     private TriagePriority priority;
     
     private PatientStatus status = PatientStatus.INTAKE;

@@ -52,11 +52,10 @@ const HandoffModal: React.FC<HandoffModalProps> = ({
 
     const fetchStaff = async () => {
       try {
-        const res = await staffAPI.getAll();
-        const staff: Staff[] = res.data;
+        const staff: Staff[] = await staffAPI.getAll();
         if (staff && staff.length > 0) {
           const docs = staff.filter(s =>
-            s.role === 'DOCTOR' || s.role === 'SURGEON'
+            s.role === 'DOCTOR'
           ).map(s => ({ id: s.id, fullName: s.fullName }));
           const nurs = staff.filter(s =>
             s.role === 'NURSE'

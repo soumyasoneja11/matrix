@@ -1,6 +1,7 @@
 package com.mediscan.service.triage.ml;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 public class TextDatasetLoader {
@@ -9,19 +10,45 @@ public class TextDatasetLoader {
     public List<Integer> labels = new ArrayList<>();
 
     public void load(String path) throws Exception {
+        texts.clear();
+        labels.clear();
 
-        BufferedReader br = new BufferedReader(new FileReader(path));
-        String line;
+        try (BufferedReader br = new BufferedReader(new InputStreamReader(openInput(path), StandardCharsets.UTF_8))) {
+            String line = br.readLine(); // skip header
+            if (line == null) {
+                return;
+            }
 
-        br.readLine();
+            while ((line = br.readLine()) != null) {
+                String[] parts = line.split(",", 2);
+                if (parts.length < 2) {
+                    continue;
+                }
 
-        while ((line = br.readLine()) != null) {
-            String[] parts = line.split(",");
+                String text = parts[0].replace("\"", "").trim();
+                String labelRaw = parts[1].replace("\"", "").trim();
+                if (text.isBlank() || labelRaw.isBlank()) {
+                    continue;
+                }
 
-            texts.add(parts[0].replace("\"", ""));
-            labels.add(Integer.parseInt(parts[1]));
+                try {
+                    texts.add(text);
+                    labels.add(Integer.parseInt(labelRaw));
+                } catch (NumberFormatException ignored) {
+                    // Skip malformed rows safely.
+                }
+            }
         }
+    }
 
-        br.close();
+    private InputStream openInput(String path) throws FileNotFoundException {
+        String resourcePath = path.startsWith("src/main/resources/")
+                ? path.substring("src/main/resources/".length())
+                : path;
+        InputStream classpath = getClass().getClassLoader().getResourceAsStream(resourcePath);
+        if (classpath != null) {
+            return classpath;
+        }
+        return new FileInputStream(path);
     }
 }

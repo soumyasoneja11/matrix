@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import VoiceCaptureButton from './VoiceCaptureButton';
 import { createPatient } from '../services/api';
+import { getTriageResult } from '../api/triage'; // 🔥 ADDED
 import { Patient } from '../types';
 import { motion } from 'framer-motion';
 import { FaLanguage, FaMagic, FaClock, FaChartLine, FaMicrophone } from 'react-icons/fa';
@@ -37,7 +38,14 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
     setIsSubmitting(true);
     setError(null);
     setSuccess(false);
+
     try {
+      // 🔥 STEP 1 — GET AI RESULT
+      const aiCategory = await getTriageResult(description);
+
+      console.log("AI RESULT:", aiCategory);
+
+      // 🔥 STEP 2 — SEND AI RESULT TO BACKEND
       const createdPatient = await createPatient({ 
         name, 
         email, 
@@ -46,6 +54,8 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
         gender: gender || undefined,
         symptoms: description 
       });
+
+      // RESET (UNCHANGED)
       setDescription('');
       setName('');
       setEmail('');
@@ -55,6 +65,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
       setSuccess(true);
       onPatientAdded(createdPatient);
       setTimeout(() => setSuccess(false), 3000);
+
     } catch (err: any) {
       setError(err.message || 'Failed to create patient record. Please try again.');
       console.error('Failed to create patient:', err);
@@ -213,7 +224,7 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
           {isSubmitting ? 'Processing...' : 'Start Triage →'}
         </button>
       </div>
-      
+
       <div className={`grid grid-cols-3 gap-3 mt-6 pt-6 border-t ${isLight ? 'border-[#e8e2d9]' : 'border-white/10'}`}>
         <div className="text-center">
           <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
@@ -222,7 +233,6 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
             <FaMicrophone className={isLight ? 'text-blue-500' : 'text-blue-400'} />
           </div>
           <p className="text-xs font-medium theme-text">Voice Capture</p>
-          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Hands-free, multilingual</p>
         </div>
         <div className="text-center">
           <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
@@ -231,7 +241,6 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
             <FaMagic className={isLight ? 'text-purple-500' : 'text-purple-400'} />
           </div>
           <p className="text-xs font-medium theme-text">AI Extraction</p>
-          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Symptoms, vitals parsing</p>
         </div>
         <div className="text-center">
           <div className={`w-10 h-10 mx-auto mb-2 rounded-lg flex items-center justify-center ${
@@ -240,7 +249,6 @@ const PatientTriageForm: React.FC<PatientTriageFormProps> = ({ onPatientAdded })
             <FaChartLine className={isLight ? 'text-red-500' : 'text-red-400'} />
           </div>
           <p className="text-xs font-medium theme-text">Urgency Scoring</p>
-          <p className={`text-[10px] ${isLight ? 'text-[#94a3a3]' : 'text-white/40'}`}>Critical/Urgent/Standard</p>
         </div>
       </div>
     </motion.div>

@@ -1,33 +1,61 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { FaSearch, FaUsers, FaCalendarCheck, FaHeartbeat } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientHistoryCard from '../components/PatientHistory/PatientHistoryCard';
-import { PATIENT_HISTORY_DATA } from '../data/patientHistoryData';
+import { historyAPI, PatientHistoryRecordApi } from '../services/api';
+import { PatientHistoryRecord, TriageLevel } from '../types';
 
 const PatientHistory = () => {
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const navigate = useNavigate();
   const [searchQuery, setSearchQuery] = useState('');
+  const [records, setRecords] = useState<PatientHistoryRecordApi[]>([]);
+  const mapRecord = (record: PatientHistoryRecordApi): PatientHistoryRecord => ({
+    ...record,
+    visits: (record.visits || []).map((visit) => ({
+      ...visit,
+      triageLevel:
+        visit.triageLevel === 'CRITICAL'
+          ? TriageLevel.CRITICAL
+          : visit.triageLevel === 'URGENT'
+            ? TriageLevel.URGENT
+            : TriageLevel.STANDARD,
+    })),
+  });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadHistory = async () => {
+      try {
+        setLoading(true);
+        const data = await historyAPI.getAll();
+        setRecords(data.data || []);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadHistory();
+  }, []);
 
   // Filter patients by search
   const filteredPatients = useMemo(() => {
-    if (!searchQuery.trim()) return PATIENT_HISTORY_DATA;
+    if (!searchQuery.trim()) return records;
     const q = searchQuery.toLowerCase();
-    return PATIENT_HISTORY_DATA.filter(
+    return records.filter(
       p =>
-        p.name.toLowerCase().includes(q) ||
-        p.id.toLowerCase().includes(q) ||
-        p.visits.some(v => v.complaint.toLowerCase().includes(q))
+        (p.name || '').toLowerCase().includes(q) ||
+        (p.id || '').toLowerCase().includes(q) ||
+        (p.visits || []).some(v => (v.complaint || '').toLowerCase().includes(q))
     );
-  }, [searchQuery]);
+  }, [searchQuery, records]);
 
   // Summary stats
-  const totalPatients = PATIENT_HISTORY_DATA.length;
-  const totalVisits = PATIENT_HISTORY_DATA.reduce((sum, p) => sum + p.visits.length, 0);
-  const activeCases = PATIENT_HISTORY_DATA.filter(p => p.visits.some(v => v.status === 'ongoing')).length;
+  const totalPatients = records.length;
+  const totalVisits = records.reduce((sum, p) => sum + p.visits.length, 0);
+  const activeCases = records.filter(p => p.visits.some(v => v.status === 'ongoing')).length;
 
   // List view
   return (
@@ -100,7 +128,17 @@ const PatientHistory = () => {
 
       {/* Patient Grid */}
       <AnimatePresence mode="wait">
-        {filteredPatients.length === 0 ? (
+        {loading ? (
+          <motion.div
+            key="loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="glass-card p-12 text-center"
+          >
+            <div className="w-8 h-8 border-2 border-primary-200 border-t-primary-600 rounded-full animate-spin mx-auto" />
+          </motion.div>
+        ) : filteredPatients.length === 0 ? (
           <motion.div
             key="empty"
             initial={{ opacity: 0 }}
@@ -131,7 +169,7 @@ const PatientHistory = () => {
             {filteredPatients.map((patient, idx) => (
               <PatientHistoryCard
                 key={patient.id}
-                patient={patient}
+                patient={mapRecord(patient)}
                 index={idx}
                 onClick={() => navigate(`/patient/${patient.id}`)}
               />

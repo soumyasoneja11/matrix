@@ -2,6 +2,8 @@ import React from 'react';
 import { PatientHistoryVisit, TriageLevel } from '../../types';
 import { useTheme } from '../../hooks/contexts/ThemeContext';
 import { motion } from 'framer-motion';
+import { QRCodeCanvas } from 'qrcode.react';
+import jsPDF from 'jspdf';
 import {
   FaHeartbeat,
   FaThermometerHalf,
@@ -13,6 +15,7 @@ import {
   FaSyringe,
   FaStickyNote,
 } from 'react-icons/fa';
+import { Download } from 'lucide-react';
 
 interface PatientTimelineProps {
   visits: PatientHistoryVisit[];
@@ -65,6 +68,27 @@ const PatientTimeline: React.FC<PatientTimelineProps> = ({ visits }) => {
   const sectionLabel = `text-[10px] font-semibold uppercase tracking-wider ${isLight ? 'text-gray-400' : 'text-white/35'}`;
   const valueText = `text-sm ${isLight ? 'text-gray-700' : 'text-white/80'}`;
 
+  const buildReportUrl = (visitId: string) =>
+    `${window.location.origin}${window.location.pathname}?report=${encodeURIComponent(visitId)}`;
+
+  const downloadVisitReportPdf = (visit: PatientHistoryVisit) => {
+    const pdf = new jsPDF();
+    pdf.setFontSize(14);
+    pdf.text('Patient Visit Report', 14, 16);
+    pdf.setFontSize(11);
+    pdf.text(`Visit ID: ${visit.id}`, 14, 26);
+    pdf.text(`Date: ${new Date(visit.date).toLocaleString()}`, 14, 33);
+    pdf.text(`Complaint: ${visit.complaint}`, 14, 40);
+    pdf.text(`Triage: ${visit.triageLevel}`, 14, 47);
+    pdf.text(`Status: ${visit.status}`, 14, 54);
+    if (visit.symptoms?.length) pdf.text(`Symptoms: ${visit.symptoms.join(', ')}`, 14, 61);
+    if (visit.notes) {
+      const split = pdf.splitTextToSize(`Notes: ${visit.notes}`, 180);
+      pdf.text(split, 14, 68);
+    }
+    pdf.save(`visit-report-${visit.id}.pdf`);
+  };
+
   return (
     <div className="relative">
       {/* Vertical timeline line */}
@@ -101,6 +125,15 @@ const PatientTimeline: React.FC<PatientTimelineProps> = ({ visits }) => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2 flex-shrink-0">
+                    <button
+                      onClick={() => downloadVisitReportPdf(visit)}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-semibold border ${
+                        isLight ? 'bg-gray-50 text-gray-700 border-gray-200' : 'bg-white/5 text-white/70 border-white/10'
+                      }`}
+                    >
+                      <Download size={10} />
+                      PDF
+                    </button>
                     <span className={`px-2.5 py-1 rounded-full text-[10px] font-bold border ${severity.badge}`}>
                       {severity.label}
                     </span>
@@ -112,6 +145,12 @@ const PatientTimeline: React.FC<PatientTimelineProps> = ({ visits }) => {
 
                 {/* Visit body */}
                 <div className="px-5 py-4 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <p className={sectionLabel}>Visit Report QR</p>
+                    <div className={`p-1 rounded-md ${isLight ? 'bg-white border border-gray-100' : 'bg-white'}`}>
+                      <QRCodeCanvas value={buildReportUrl(visit.id)} size={44} bgColor="#ffffff" fgColor="#1a2e2e" />
+                    </div>
+                  </div>
                   {/* Symptoms */}
                   {visit.symptoms.length > 0 && (
                     <div>

@@ -3,13 +3,17 @@ package com.mediscan.service;
 import com.mediscan.dto.auth.AuthRequest;
 import com.mediscan.dto.auth.AuthResponse;
 import com.mediscan.dto.auth.RegisterRequest;
+import com.mediscan.exception.ResourceNotFoundException;
 import com.mediscan.model.User;
+import com.mediscan.model.enums.Role;
 import com.mediscan.repository.UserRepository;
 import com.mediscan.security.JwtService;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.util.Locale;
 
 @Service
 public class AuthService {
@@ -30,12 +34,19 @@ public class AuthService {
     }
 
     public AuthResponse register(RegisterRequest request) {
+        if (repository.existsByUsername(request.getUsername())) {
+            throw new IllegalArgumentException("Username is already in use");
+        }
+        if (repository.existsByEmail(request.getEmail())) {
+            throw new IllegalArgumentException("Email is already in use");
+        }
+
         User user = User.builder()
                 .fullName(request.getFullName())
                 .username(request.getUsername())
                 .email(request.getEmail())
                 .password(passwordEncoder.encode(request.getPassword()))
-                .role(com.mediscan.model.enums.Role.valueOf(request.getRole()))
+                .role(parseRole(request.getRole()))
                 .department(request.getDepartment())
                 .specialization(request.getSpecialization())
                 .active(true)
@@ -71,7 +82,7 @@ public class AuthService {
         );
         
         var user = repository.findByUsername(request.getUsername())
-                .orElseThrow();
+                .orElseThrow(() -> new ResourceNotFoundException("User not found for username: " + request.getUsername()));
         
         var userDetails = org.springframework.security.core.userdetails.User.builder()
                 .username(user.getUsername())
@@ -90,5 +101,16 @@ public class AuthService {
                 .department(user.getDepartment())
                 .email(user.getEmail())
                 .build();
+    }
+
+    private Role parseRole(String roleValue) {
+        if (roleValue == null || roleValue.isBlank()) {
+            return Role.NURSE;
+        }
+        try {
+            return Role.valueOf(roleValue.trim().toUpperCase(Locale.ROOT));
+        } catch (IllegalArgumentException ex) {
+            return Role.NURSE;
+        }
     }
 }

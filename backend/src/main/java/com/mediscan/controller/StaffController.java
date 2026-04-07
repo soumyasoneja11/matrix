@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/api/staff")
@@ -34,9 +35,33 @@ public class StaffController {
         ));
     }
 
+    @PostMapping
+    public ResponseEntity<ApiResponse<User>> createStaff(@RequestBody User user) {
+        return ResponseEntity.ok(ApiResponse.success(
+                staffService.createStaff(user),
+                "Staff member created successfully"
+        ));
+    }
+
     @PutMapping("/{id}")
-    public ResponseEntity<ApiResponse<Void>> updateStaff(@PathVariable String id, @RequestBody User user) {
-        staffService.updateStaff(id, user);
-        return ResponseEntity.ok(ApiResponse.success(null, "Staff member updated successfully"));
+    public ResponseEntity<ApiResponse<User>> updateStaff(@PathVariable String id, @RequestBody User user) {
+        return ResponseEntity.ok(ApiResponse.success(
+                staffService.updateStaff(id, user),
+                "Staff member updated successfully"
+        ));
+    }
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<Void>> deleteStaff(@PathVariable String id) {
+        staffService.deleteStaff(id);
+        return ResponseEntity.ok(ApiResponse.success(null, "Staff member deleted successfully"));
+    }
+
+    @GetMapping("/assignments")
+    public ResponseEntity<ApiResponse<List<Map<String, Object>>>> getAssignments() {
+        return ResponseEntity.ok(ApiResponse.success(
+                staffService.getAssignments(),
+                "Staff assignments retrieved successfully"
+        ));
     }
 }

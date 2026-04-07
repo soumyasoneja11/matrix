@@ -9,47 +9,8 @@ import { Activity } from 'lucide-react';
 import { useTheme } from '../hooks/contexts/ThemeContext';
 import { useAuth } from '../hooks/contexts/AuthContext';
 
-const DEMO_PATIENTS: Patient[] = [
-  {
-    id: "9001",
-    name: 'Maria Gonzalez',
-    age: 58,
-    description: 'Severe chest pain radiating to left arm, shortness of breath, diaphoresis. History of hypertension. BP 180/110, HR 112, SpO2 91%.',
-    triageLevel: TriageLevel.CRITICAL,
-    assignedStaff: 'Dr. Sarah Chen',
-    location: 'Trauma Bay 1',
-    vitals: { heartRate: 112, bloodPressure: '180/110', temperature: 37.2, oxygenSaturation: 91 },
-    createdAt: new Date(Date.now() - 12 * 60000).toISOString(),
-    updatedAt: new Date(Date.now() - 5 * 60000).toISOString(),
-  },
-  {
-    id: "9002",
-    name: 'Robert Kim',
-    age: 34,
-    description: 'Fall from ladder, suspected right tibial fracture. Moderate pain 7/10, swelling at mid-shaft. Neurovascularly intact distally.',
-    triageLevel: TriageLevel.URGENT,
-    assignedStaff: 'Dr. James Wilson',
-    location: 'Room AC-3',
-    vitals: { heartRate: 88, bloodPressure: '135/85', temperature: 36.8, oxygenSaturation: 98 },
-    createdAt: new Date(Date.now() - 45 * 60000).toISOString(),
-    updatedAt: new Date(Date.now() - 20 * 60000).toISOString(),
-  },
-  {
-    id: "9003",
-    name: 'Emily Patel',
-    age: 22,
-    description: 'Sore throat for 3 days, mild fever, no difficulty swallowing or breathing. No known allergies. Vitals stable.',
-    triageLevel: TriageLevel.STANDARD,
-    assignedStaff: 'Nurse Rodriguez',
-    location: 'Waiting Area B',
-    vitals: { heartRate: 72, bloodPressure: '118/75', temperature: 37.8, oxygenSaturation: 99 },
-    createdAt: new Date(Date.now() - 90 * 60000).toISOString(),
-    updatedAt: new Date(Date.now() - 60 * 60000).toISOString(),
-  },
-];
-
 const Dashboard = () => {
-  const [patients, setPatients] = useState<Patient[]>(DEMO_PATIENTS);
+  const [patients, setPatients] = useState<Patient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [lastUpdate, setLastUpdate] = useState(new Date());
@@ -91,16 +52,16 @@ const Dashboard = () => {
     if (pauseRefreshRef.current) return;
 
     if (isDemo) {
-      setPatients(sortForBoard(DEMO_PATIENTS));
+      setPatients([]);
       setLastUpdate(new Date());
-      setError(null);
+      setError('Demo mode is disabled for live dashboard data. Sign in with a real account to load MongoDB patients.');
       setLoading(false);
       return;
     }
 
     try {
       const data = await fetchPatients();
-      setPatients(data.length > 0 ? data : sortForBoard(DEMO_PATIENTS));
+      setPatients(sortForBoard(data));
       setLastUpdate(new Date());
       setError(null);
     } catch (err: any) {
@@ -111,7 +72,7 @@ const Dashboard = () => {
         pauseRefreshRef.current = true;
       }
 
-      setPatients(prev => prev.length === 0 ? sortForBoard(DEMO_PATIENTS) : prev);
+      setPatients(prev => prev);
     } finally {
       setLoading(false);
     }

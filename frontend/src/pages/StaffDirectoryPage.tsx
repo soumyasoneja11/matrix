@@ -8,7 +8,7 @@ import { Modal } from '../components/ui/Modal';
 import { InputField, SelectField } from '../components/ui/InputField';
 import { EmptyState } from '../components/ui/EmptyState';
 import { staffAPI } from '../services/api';
-import { Staff, Role } from '../types';
+import { Staff } from '../types';
 
 const roleFilters: { value: string; label: string }[] = [
   { value: 'ALL', label: 'All' },
@@ -36,8 +36,8 @@ export function StaffDirectoryPage() {
 
   const fetchStaff = async () => {
     try {
-      const res = await staffAPI.getAll();
-      setStaff(res.data);
+      const data = await staffAPI.getAll();
+      setStaff(data);
     } catch {}
   };
 

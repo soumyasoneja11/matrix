@@ -6,7 +6,7 @@ public class Trainer {
 
     public void train(TriageModel m, List<DataPoint> data) {
 
-        for (int epoch = 0; epoch < 200; epoch++) {
+        for (int epoch = 0; epoch < 500; epoch++) {
 
             for (DataPoint d : data) {
 
