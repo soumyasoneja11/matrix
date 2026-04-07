@@ -10,7 +10,7 @@ import { Button } from '../components/ui/Button';
 import { TextAreaField, SelectField } from '../components/ui/InputField';
 import { Badge } from '../components/ui/Badge';
 import { EmptyState } from '../components/ui/EmptyState';
-import { useVoiceRecognition } from '../hooks/useVoiceRecognition';
+import { useCloudVoiceRecording } from '../hooks/useCloudVoiceRecording';
 import { patientAPI } from '../services/api';
 import { Patient } from '../types';
 import mikePng from '../assets/images/mike.png';
@@ -36,12 +36,17 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
   const [patientText, setPatientText] = useState('');
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const { isListening, startListening, stopListening, transcript, resetTranscript } =
-    useVoiceRecognition({ language });
+  const {
+    isRecording,
+    processing: voiceProcessing,
+    error: voiceError,
+    startRecording,
+    stopRecording,
+  } = useCloudVoiceRecording();
 
   React.useEffect(() => {
-    if (transcript) setPatientText(transcript);
-  }, [transcript]);
+    if (voiceError) setError(voiceError);
+  }, [voiceError]);
 
   const handleAnalyze = async () => {
     if (!patientText.trim()) return;
@@ -51,15 +56,30 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
       await patientAPI.triage({ patientDetails: patientText, language });
       onRefresh();
       setPatientText('');
-      resetTranscript();
     } catch (err: any) {
       setError(err.message || 'Analysis failed. Please check your connection and try again.');
       console.error('Triage analysis failed:', err);
     } finally { setAnalyzing(false); }
   };
 
-  const handleClear = () => { setPatientText(''); resetTranscript(); };
-  const toggleMic = () => { isListening ? stopListening() : startListening(); };
+  const handleClear = () => { setPatientText(''); };
+
+  const toggleMic = async () => {
+    setError(null);
+    try {
+      if (isRecording) {
+        const text = await stopRecording();
+        if (text) {
+          setPatientText((prev) => (prev ? `${prev.trim()} ${text}` : text).trim());
+        }
+      } else {
+        await startRecording();
+      }
+    } catch (e: unknown) {
+      const msg = e instanceof Error ? e.message : 'Voice capture failed';
+      setError(msg);
+    }
+  };
 
   const criticalPatients = patients.filter((p) => p.priority === 'RED' || p.priority === 'ORANGE');
   const urgentPatients = patients.filter((p) => p.priority === 'YELLOW');
@@ -105,7 +125,7 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
                     <motion.div
                       key={i}
                       className="w-1.5 rounded-full bg-gradient-to-t from-primary-400 to-primary-300"
-                      animate={isListening ? {
+                      animate={isRecording ? {
                         height: [8, 40 + Math.random() * 50, 8],
                       } : { height: 8 }}
                       transition={{
@@ -121,15 +141,16 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
                 {/* Mic Button */}
                 <motion.button
                   onClick={toggleMic}
+                  disabled={voiceProcessing}
                   whileTap={{ scale: 0.92 }}
                   whileHover={{ scale: 1.05 }}
-                  className={`relative w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl ${
-                    isListening
+                  className={`relative w-24 h-24 rounded-full flex items-center justify-center transition-all duration-300 shadow-2xl disabled:opacity-60 disabled:pointer-events-none ${
+                    isRecording
                       ? 'bg-gradient-to-br from-red-500 to-red-600 shadow-red-500/50'
                       : 'bg-gradient-to-br from-primary-500 to-primary-600 hover:from-primary-600 hover:to-primary-700'
                   }`}
                 >
-                  {isListening && (
+                  {isRecording && (
                     <>
                       <motion.span
                         className="absolute inset-0 rounded-full bg-red-400/40"
@@ -147,10 +168,16 @@ export function PatientTriagePage({ patients, lastUpdated, onRefresh }: PatientT
                 </motion.button>
 
                 <p className="text-primary-300 text-sm mt-6 font-medium tracking-wide">
-                  {isListening ? 'Recording... tap to stop' : 'Tap to record'}
+                  {voiceProcessing
+                    ? 'Transcribing with AI...'
+                    : isRecording
+                      ? 'Recording... tap to stop'
+                      : 'Tap to record'}
                 </p>
                 <p className="text-forest-400 text-xs mt-2 text-center">
-                  {isListening ? 'Speak clearly — symptoms, vitals, history' : 'Multilingual voice intake'}
+                  {isRecording
+                    ? 'Speak clearly — symptoms, vitals, history'
+                    : 'Cloud STT: Hindi, English & Hinglish (Gemini + Whisper fallback)'}
                 </p>
               </div>
             </div>

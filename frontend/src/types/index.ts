@@ -18,7 +18,7 @@ export const PatientStatus = {
 
 export type PatientStatus = typeof PatientStatus[keyof typeof PatientStatus];
 
-export type Role = 'ADMIN' | 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST';
+export type Role = 'ADMIN' | 'DOCTOR' | 'SUPERVISOR' | 'NURSE' | 'RECEPTIONIST' | 'PATIENT';
 
 export type Department =
   | 'EMERGENCY_DEPARTMENT'
@@ -34,7 +34,8 @@ export type Department =
   | 'GYNECOLOGY'
   | 'ADMINISTRATION'
   | 'OPERATIONS'
-  | 'FRONT_DESK';
+  | 'FRONT_DESK'
+  | 'PATIENT_PORTAL';
 
 export interface Vitals {
   heartRate?: number;
@@ -154,6 +155,8 @@ export interface AuthUser {
   role: string;
   department: string;
   token: string;
+  /** Set for PATIENT accounts linked to a Mongo patient record */
+  linkedPatientId?: string | null;
 }
 
 export interface LoginRequest {

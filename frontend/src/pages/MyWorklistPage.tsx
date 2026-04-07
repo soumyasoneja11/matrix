@@ -18,8 +18,8 @@ export function MyWorklistPage() {
     const fetch = async () => {
       setLoading(true);
       try {
-        const res = await worklistAPI.getMyWorklist();
-        setWorklist(res.data);
+        const data = await worklistAPI.getMyWorklist();
+        setWorklist(data);
         setError('');
       } catch (err: any) {
         if (err?.response?.status === 403) {

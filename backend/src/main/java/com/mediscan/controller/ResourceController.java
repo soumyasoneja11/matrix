@@ -27,6 +27,14 @@ public class ResourceController {
         ));
     }
 
+    @GetMapping("/rooms")
+    public ResponseEntity<ApiResponse<List<Room>>> getAllRooms() {
+        return ResponseEntity.ok(ApiResponse.success(
+                resourceService.getAllRooms(),
+                "Rooms retrieved successfully"
+        ));
+    }
+
     @GetMapping("/zones/{zoneId}/rooms")
     public ResponseEntity<ApiResponse<List<Room>>> getRoomsByZone(@PathVariable String zoneId) {
         return ResponseEntity.ok(ApiResponse.success(
@@ -40,6 +48,22 @@ public class ResourceController {
         return ResponseEntity.ok(ApiResponse.success(
                 resourceService.getAvailableRooms(),
                 "Available rooms retrieved successfully"
+        ));
+    }
+
+    @PostMapping("/zones")
+    public ResponseEntity<ApiResponse<Zone>> createZone(@RequestBody Zone zone) {
+        return ResponseEntity.ok(ApiResponse.success(
+                resourceService.createZone(zone),
+                "Zone created successfully"
+        ));
+    }
+
+    @PostMapping("/rooms")
+    public ResponseEntity<ApiResponse<Room>> createRoom(@RequestBody Room room) {
+        return ResponseEntity.ok(ApiResponse.success(
+                resourceService.createRoom(room),
+                "Room created successfully"
         ));
     }
 }

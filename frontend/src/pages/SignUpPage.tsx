@@ -13,10 +13,12 @@ interface SignUpPageProps {
 
 const roleOptions = [
   { value: '', label: 'Select Role' },
+  { value: 'ADMIN', label: 'Administrator' },
   { value: 'DOCTOR', label: 'Doctor' },
   { value: 'SUPERVISOR', label: 'Supervisor' },
   { value: 'NURSE', label: 'Nurse' },
   { value: 'RECEPTIONIST', label: 'Receptionist' },
+  { value: 'PATIENT', label: 'Patient (portal)' },
 ];
 
 const departmentOptions = [
@@ -35,6 +37,7 @@ const departmentOptions = [
   { value: 'ADMINISTRATION', label: 'Administration' },
   { value: 'OPERATIONS', label: 'Operations' },
   { value: 'FRONT_DESK', label: 'Front Desk' },
+  { value: 'PATIENT_PORTAL', label: 'Patient Portal' },
 ];
 
 export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
@@ -52,12 +55,23 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
-  const update = (key: string, value: string) => setForm((prev) => ({ ...prev, [key]: value }));
+  const update = (key: string, value: string) => {
+    if (key === 'role' && value === 'PATIENT') {
+      setForm((prev) => ({ ...prev, role: value as Role, department: 'PATIENT_PORTAL' }));
+      return;
+    }
+    setForm((prev) => ({ ...prev, [key]: value }));
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.role || !form.department) {
-      setError('Please select a role and department.');
+    if (!form.role) {
+      setError('Please select a role.');
+      return;
+    }
+    const department = form.role === 'PATIENT' ? 'PATIENT_PORTAL' : form.department;
+    if (form.role !== 'PATIENT' && !form.department) {
+      setError('Please select a department.');
       return;
     }
     setError('');
@@ -69,7 +83,7 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
         email: form.email,
         password: form.password,
         role: form.role as Role,
-        department: form.department,
+        department,
       });
     } catch (err: any) {
       setError(err?.response?.data?.message || 'Registration failed. Please try again.');
@@ -157,7 +171,8 @@ export function SignUpPage({ onSwitchToLogin }: SignUpPageProps) {
                 value={form.department}
                 onChange={(e) => update('department', e.target.value)}
                 options={departmentOptions}
-                required
+                required={form.role !== 'PATIENT'}
+                disabled={form.role === 'PATIENT'}
               />
             </div>
 

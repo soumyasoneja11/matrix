@@ -1,5 +1,6 @@
-import { useState, useCallback } from 'react';
-import { DEMO_PATIENTS, DEMO_ZONES, DEMO_ROOMS } from '../utils/mockData';
+import { useState, useCallback, useEffect } from 'react';
+import { historyAPI, patientAPI, type PatientHistoryRecordApi } from '../services/api';
+import type { Patient } from '../types';
 
 export interface PriorityItem {
   label: string;
@@ -37,10 +38,8 @@ export interface AnalyticsSummary {
   recentActivity: ActivityEntry[];
 }
 
-const generateTimestamp = (minutesAgo: number): string => {
-  const d = new Date();
-  d.setMinutes(d.getMinutes() - minutesAgo);
-  return d.toLocaleString('en-US', {
+const formatTimestamp = (date: Date): string => {
+  return date.toLocaleString('en-US', {
     month: 'short',
     day: 'numeric',
     hour: '2-digit',
@@ -48,8 +47,24 @@ const generateTimestamp = (minutesAgo: number): string => {
   });
 };
 
-const computeAnalytics = (): AnalyticsSummary => {
-  const patients = DEMO_PATIENTS;
+const isToday = (value?: string) => {
+  if (!value) return false;
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return false;
+  const now = new Date();
+  return d.getFullYear() === now.getFullYear()
+    && d.getMonth() === now.getMonth()
+    && d.getDate() === now.getDate();
+};
+
+const pickDate = (patient: Patient): Date | null => {
+  const raw = patient.updatedAt || patient.createdAt;
+  if (!raw) return null;
+  const parsed = new Date(raw);
+  return Number.isNaN(parsed.getTime()) ? null : parsed;
+};
+
+const computeAnalytics = (patients: Patient[], historyRecords: PatientHistoryRecordApi[]): AnalyticsSummary => {
   const totalPatients = patients.length;
 
   const criticalCount = patients.filter(p => p.triageLevel === 'CRITICAL').length;
@@ -59,11 +74,16 @@ const computeAnalytics = (): AnalyticsSummary => {
   const ages = patients.map(p => p.age ?? 0).filter(a => a > 0);
   const averageAge = ages.length > 0 ? Math.round(ages.reduce((s, a) => s + a, 0) / ages.length) : 0;
 
-  const todaysIntake = 7;
-  const discharges = 3;
-  const handoffs = 4;
+  const todaysIntake = patients.filter(p => isToday(p.createdAt)).length;
+  const discharges = patients.filter(p => (p.status || '').toUpperCase() === 'DISCHARGED').length;
+  const handoffs = historyRecords.reduce((sum, record) => {
+    const handoffCount = (record.visits || []).filter(v =>
+      ((v.notes || '') + ' ' + (v.complaint || '')).toLowerCase().includes('handoff')
+    ).length;
+    return sum + handoffCount;
+  }, 0);
 
-  const totalEvents = todaysIntake + discharges + handoffs + 5;
+  const totalEvents = historyRecords.reduce((sum, record) => sum + (record.visits?.length || 0), 0);
 
   const priorityDistribution: PriorityItem[] = [
     {
@@ -93,62 +113,46 @@ const computeAnalytics = (): AnalyticsSummary => {
   ];
 
   const eventTypes: EventTypeItem[] = [
-    { label: 'Resource Allocation', count: 8, icon: '🏗️' },
+    { label: 'Resource Allocation', count: patients.filter(p => !!p.zoneName || !!p.roomCode).length, icon: '🏗️' },
     { label: 'Intake', count: todaysIntake, icon: '📋' },
-    { label: 'Reassessment', count: 5, icon: '🔄' },
-    { label: 'Priority Change', count: 3, icon: '⚡' },
+    { label: 'Reassessment', count: Math.max(totalEvents - todaysIntake, 0), icon: '🔄' },
+    { label: 'Priority Change', count: historyRecords.reduce((sum, record) => {
+      const count = (record.visits || []).filter(v => (v.notes || '').toLowerCase().includes('triage')).length;
+      return sum + count;
+    }, 0), icon: '⚡' },
   ];
 
-  const recentActivity: ActivityEntry[] = [
-    {
-      id: 1,
-      eventType: 'Resource Allocation',
-      badgeClass: 'from-blue-500 to-cyan-500',
-      description: 'ICU Bed TR-1 assigned to Rahul Sharma',
-      actor: 'System',
-      timestamp: generateTimestamp(5),
-    },
-    {
-      id: 2,
-      eventType: 'Intake',
-      badgeClass: 'from-green-500 to-emerald-500',
-      description: 'New patient Priya Patel registered — CRITICAL triage',
-      actor: 'Staff',
-      timestamp: generateTimestamp(12),
-    },
-    {
-      id: 3,
-      eventType: 'Priority Change',
-      badgeClass: 'from-amber-500 to-orange-500',
-      description: 'Vikram Singh priority escalated STANDARD → URGENT',
-      actor: 'Dr. Advik Mehta',
-      timestamp: generateTimestamp(28),
-    },
-    {
-      id: 4,
-      eventType: 'Resource Allocation',
-      badgeClass: 'from-blue-500 to-cyan-500',
-      description: 'Ventilator assigned to Resuscitation Bay TR-3',
-      actor: 'System',
-      timestamp: generateTimestamp(35),
-    },
-    {
-      id: 5,
-      eventType: 'Intake',
-      badgeClass: 'from-green-500 to-emerald-500',
-      description: 'New patient Amit Kumar registered — CRITICAL triage',
-      actor: 'Staff',
-      timestamp: generateTimestamp(42),
-    },
-    {
-      id: 6,
-      eventType: 'Priority Change',
-      badgeClass: 'from-amber-500 to-orange-500',
-      description: 'Meera Joshi priority changed STANDARD → URGENT',
-      actor: 'Dr. Rudra Joshi',
-      timestamp: generateTimestamp(55),
-    },
-  ];
+  const recentActivity: ActivityEntry[] = patients
+    .map((patient) => {
+      const d = pickDate(patient);
+      if (!d) return null;
+      const isDischarged = (patient.status || '').toUpperCase() === 'DISCHARGED';
+      const isAllocated = Boolean(patient.zoneName || patient.roomCode);
+      const eventType = isDischarged ? 'Discharge' : isAllocated ? 'Resource Allocation' : 'Intake';
+      return {
+        id: Number.parseInt(String(patient.id).replace(/\D/g, ''), 10) || d.getTime(),
+        eventType,
+        badgeClass:
+          eventType === 'Discharge'
+            ? 'from-purple-500 to-pink-500'
+            : eventType === 'Resource Allocation'
+              ? 'from-blue-500 to-cyan-500'
+              : 'from-green-500 to-emerald-500',
+        description:
+          eventType === 'Discharge'
+            ? `${patient.name} discharged from care`
+            : eventType === 'Resource Allocation'
+              ? `${patient.name} assigned to ${patient.zoneName || 'care zone'} ${patient.roomCode ? `(${patient.roomCode})` : ''}`.trim()
+              : `New intake for ${patient.name} (${patient.triageLevel})`,
+        actor: patient.assignedStaff || 'System',
+        timestamp: formatTimestamp(d),
+        _time: d.getTime(),
+      };
+    })
+    .filter((entry): entry is ActivityEntry & { _time: number } => Boolean(entry))
+    .sort((a, b) => b._time - a._time)
+    .slice(0, 12)
+    .map(({ _time, ...entry }) => entry);
 
   return {
     totalPatients,
@@ -164,17 +168,35 @@ const computeAnalytics = (): AnalyticsSummary => {
 };
 
 export const useAnalyticsData = () => {
-  const [data, setData] = useState<AnalyticsSummary>(computeAnalytics);
+  const [data, setData] = useState<AnalyticsSummary>({
+    totalPatients: 0,
+    todaysIntake: 0,
+    discharges: 0,
+    handoffs: 0,
+    averageAge: 0,
+    totalEvents: 0,
+    priorityDistribution: [],
+    eventTypes: [],
+    recentActivity: [],
+  });
   const [loading, setLoading] = useState(false);
 
-  const refresh = useCallback(() => {
+  const refresh = useCallback(async () => {
     setLoading(true);
-    // Simulate a short delay for UX feedback
-    setTimeout(() => {
-      setData(computeAnalytics());
+    try {
+      const [patients, historyRecords] = await Promise.all([
+        patientAPI.getAll(),
+        historyAPI.getAll().then((res) => res.data || []),
+      ]);
+      setData(computeAnalytics(patients, historyRecords));
+    } finally {
       setLoading(false);
-    }, 500);
+    }
   }, []);
+
+  useEffect(() => {
+    refresh();
+  }, [refresh]);
 
   return { data, loading, refresh };
 };

@@ -12,6 +12,8 @@ interface AuthContextType {
   logout: () => void;
   isSupervisor: boolean;
   isDoctor: boolean;
+  isPatient: boolean;
+  isAdmin: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -87,9 +89,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const isSupervisor = user?.role === 'SUPERVISOR' || user?.role === 'ADMIN';
   const isDoctor = user?.role === 'DOCTOR';
+  const isPatient = user?.role === 'PATIENT';
+  const isAdmin = user?.role === 'ADMIN' || user?.role === 'SUPERVISOR';
 
   return (
-    <AuthContext.Provider value={{ user, loading, isDemo, login, signup, demoLogin, logout, isSupervisor, isDoctor }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        loading,
+        isDemo,
+        login,
+        signup,
+        demoLogin,
+        logout,
+        isSupervisor,
+        isDoctor,
+        isPatient,
+        isAdmin,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );

@@ -14,8 +14,10 @@ import {
 } from 'lucide-react';
 import hospitalBg from '../assets/images/hospital.png';
 import { useTheme } from '../hooks/contexts/ThemeContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
+import { FileText, IdCard } from 'lucide-react';
 
-const navTabs = [
+const staffNavTabs = [
   { path: '/dashboard', label: 'Dashboard', icon: <HeartPulse size={20} />, gradient: 'from-red-500 to-rose-600' },
   { path: '/resource-allocation', label: 'Resources', icon: <LayoutGrid size={20} />, gradient: 'from-blue-500 to-cyan-600' },
   { path: '/staff-directory', label: 'Staff', icon: <Users size={20} />, gradient: 'from-purple-500 to-violet-600' },
@@ -25,10 +27,18 @@ const navTabs = [
   { path: '/recycle-bin', label: 'Recycle Bin', icon: <Trash2 size={20} />, gradient: 'from-gray-500 to-slate-600' },
 ];
 
+const patientNavTabs = [
+  { path: '/patient-history', label: 'My History', icon: <FileText size={20} />, gradient: 'from-teal-500 to-cyan-600' },
+  { path: '/patient/me', label: 'My Record', icon: <IdCard size={20} />, gradient: 'from-emerald-500 to-green-600' },
+];
+
 export default function HomePage() {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === 'light';
+  const isPatient = user?.role === 'PATIENT';
+  const navTabs = isPatient ? patientNavTabs : staffNavTabs;
 
   return (
     <div className="min-h-screen relative overflow-hidden flex flex-col">
@@ -117,7 +127,7 @@ export default function HomePage() {
               initial={{ opacity: 0, y: 15 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.45, duration: 0.5 }}
-              onClick={() => navigate('/triage')}
+              onClick={() => navigate(isPatient ? '/patient-history' : '/triage')}
               whileHover={{ scale: 1.04 }}
               whileTap={{ scale: 0.97 }}
               className={`inline-flex items-center gap-3 px-8 py-4 rounded-xl
@@ -129,7 +139,7 @@ export default function HomePage() {
                 }`}
             >
               <Activity size={18} />
-              Start Triage
+              {isPatient ? 'My medical history' : 'Start Triage'}
               <ArrowRight size={16} />
             </motion.button>
           </motion.div>
