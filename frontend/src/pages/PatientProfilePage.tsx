@@ -8,10 +8,12 @@ import PatientHistoryHeader from '../components/PatientHistory/PatientHistoryHea
 import PatientTimeline from '../components/PatientHistory/PatientTimeline';
 import { historyAPI, PatientHistoryRecordApi } from '../services/api';
 import { PatientHistoryRecord, TriageLevel } from '../types';
+import { useAuth } from '../hooks/contexts/AuthContext';
 
 const PatientProfilePage = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { user, loading: authLoading } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const [patient, setPatient] = useState<PatientHistoryRecordApi | null>(null);
@@ -32,12 +34,26 @@ const PatientProfilePage = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (authLoading) return;
+    if (id === 'me' && user?.role !== 'PATIENT') {
+      navigate('/patient-history', { replace: true });
+    }
+  }, [id, user?.role, navigate, authLoading]);
+
+  useEffect(() => {
     const load = async () => {
       if (!id) return;
+      if (id === 'me' && authLoading) return;
+      if (id === 'me' && user?.role !== 'PATIENT') return;
       try {
         setLoading(true);
-        const data = await historyAPI.getById(id);
-        setPatient(data.data || null);
+        if (id === 'me') {
+          const mine = await historyAPI.getMine();
+          setPatient(mine || null);
+        } else {
+          const data = await historyAPI.getById(id);
+          setPatient(data.data || null);
+        }
       } catch {
         setPatient(null);
       } finally {
@@ -45,7 +61,7 @@ const PatientProfilePage = () => {
       }
     };
     load();
-  }, [id]);
+  }, [id, user?.role, authLoading]);
 
   if (loading) {
     return (

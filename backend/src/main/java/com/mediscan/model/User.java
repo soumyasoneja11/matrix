@@ -32,6 +32,9 @@ public class User {
     private String specialization;
     
     private Set<String> permissions = new HashSet<>();
+
+    /** Optional link to patients.id when account is a patient portal user */
+    private String linkedPatientId;
     
     private Boolean active = true;
 
@@ -50,6 +53,7 @@ public class User {
         public Builder specialization(String spec) { user.specialization = spec; return this; }
         public Builder permissions(Set<String> perms) { user.permissions = perms; return this; }
         public Builder active(Boolean active) { user.active = active; return this; }
+        public Builder linkedPatientId(String linkedPatientId) { user.linkedPatientId = linkedPatientId; return this; }
         public User build() { return user; }
     }
 
@@ -76,4 +80,6 @@ public class User {
     public void setPermissions(Set<String> permissions) { this.permissions = permissions; }
     public Boolean getActive() { return active; }
     public void setActive(Boolean active) { this.active = active; }
+    public String getLinkedPatientId() { return linkedPatientId; }
+    public void setLinkedPatientId(String linkedPatientId) { this.linkedPatientId = linkedPatientId; }
 }

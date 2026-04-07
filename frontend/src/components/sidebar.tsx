@@ -9,12 +9,14 @@ import {
   FaChartLine, 
   FaTrashAlt,
   FaMicrophone,
-  FaHistory 
+  FaHistory,
+  FaIdCard,
 } from 'react-icons/fa';
 import { motion } from 'framer-motion';
 import { useTheme } from '../hooks/contexts/ThemeContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
 
-const navItems = [
+const staffNavItems = [
   { path: '/', icon: FaHome, label: 'Home', color: 'from-primary-500 to-purple-500' },
   { path: '/triage', icon: FaUserInjured, label: 'Patient Triage', color: 'from-cyan-500 to-blue-500' },
   { path: '/resource-allocation', icon: FaBed, label: 'Resource Allocation', color: 'from-green-500 to-emerald-500' },
@@ -26,9 +28,24 @@ const navItems = [
   { path: '/recycle-bin', icon: FaTrashAlt, label: 'Recycle Bin', color: 'from-gray-500 to-gray-700' },
 ];
 
+const patientNavItems = [
+  { path: '/', icon: FaHome, label: 'Home', color: 'from-primary-500 to-purple-500' },
+  { path: '/patient-history', icon: FaHistory, label: 'My History', color: 'from-teal-500 to-cyan-500' },
+  { path: '/patient/me', icon: FaIdCard, label: 'My Record', color: 'from-emerald-500 to-green-500' },
+];
+
 const Sidebar = () => {
   const { theme } = useTheme();
+  const { isPatient, isAdmin } = useAuth();
   const isLight = theme === 'light';
+
+  const navItems = isPatient
+    ? patientNavItems
+    : staffNavItems.filter((item) => {
+        if (!isAdmin && item.path === '/staff-management') return false;
+        if (!isAdmin && item.path === '/recycle-bin') return false;
+        return true;
+      });
 
   return (
     <motion.aside 

@@ -11,6 +11,7 @@ public class AuthResponse {
     private String fullName;
     private String email;
     private String department;
+    private String linkedPatientId;
 
     public AuthResponse() {}
 
@@ -24,6 +25,7 @@ public class AuthResponse {
         public Builder fullName(String fullName) { response.fullName = fullName; return this; }
         public Builder email(String email) { response.email = email; return this; }
         public Builder department(String department) { response.department = department; return this; }
+        public Builder linkedPatientId(String linkedPatientId) { response.linkedPatientId = linkedPatientId; return this; }
         
         public AuthResponse build() { return response; }
     }
@@ -44,4 +46,6 @@ public class AuthResponse {
     public void setEmail(String email) { this.email = email; }
     public String getDepartment() { return department; }
     public void setDepartment(String department) { this.department = department; }
+    public String getLinkedPatientId() { return linkedPatientId; }
+    public void setLinkedPatientId(String linkedPatientId) { this.linkedPatientId = linkedPatientId; }
 }

@@ -7,10 +7,12 @@ import {
   FaClipboardList,
   FaChartLine,
   FaHistory,
+  FaUser,
 } from 'react-icons/fa';
 import { useTheme } from '../hooks/contexts/ThemeContext';
+import { useAuth } from '../hooks/contexts/AuthContext';
 
-const navItems = [
+const staffNavItems = [
   { path: '/triage', icon: FaUserInjured, label: 'Patient Triage' },
   { path: '/resource-allocation', icon: FaBed, label: 'Resource Allocation' },
   { path: '/staff-directory', icon: FaUsers, label: 'Staff Directory' },
@@ -20,9 +22,16 @@ const navItems = [
   { path: '/analytics', icon: FaChartLine, label: 'Analytics' },
 ];
 
+const patientNavItems = [
+  { path: '/patient-history', icon: FaHistory, label: 'My History' },
+  { path: '/patient/me', icon: FaUser, label: 'My Record' },
+];
+
 const Navbar = () => {
   const { theme } = useTheme();
+  const { isPatient } = useAuth();
   const isLight = theme === 'light';
+  const navItems = isPatient ? patientNavItems : staffNavItems;
 
   return (
     <div className="flex justify-center px-4 mt-3 mb-1">

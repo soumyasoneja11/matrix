@@ -6,8 +6,10 @@ import { useTheme } from '../hooks/contexts/ThemeContext';
 import PatientHistoryCard from '../components/PatientHistory/PatientHistoryCard';
 import { historyAPI, PatientHistoryRecordApi } from '../services/api';
 import { PatientHistoryRecord, TriageLevel } from '../types';
+import { useAuth } from '../hooks/contexts/AuthContext';
 
 const PatientHistory = () => {
+  const { user } = useAuth();
   const { theme } = useTheme();
   const isLight = theme === 'light';
   const navigate = useNavigate();
@@ -31,14 +33,19 @@ const PatientHistory = () => {
     const loadHistory = async () => {
       try {
         setLoading(true);
-        const data = await historyAPI.getAll();
-        setRecords(data.data || []);
+        if (user?.role === 'PATIENT') {
+          const mine = await historyAPI.getMine();
+          setRecords(mine ? [mine] : []);
+        } else {
+          const data = await historyAPI.getAll();
+          setRecords(data.data || []);
+        }
       } finally {
         setLoading(false);
       }
     };
     loadHistory();
-  }, []);
+  }, [user?.role]);
 
   // Filter patients by search
   const filteredPatients = useMemo(() => {
@@ -64,9 +71,13 @@ const PatientHistory = () => {
       <div className="flex items-start justify-between gap-4">
         <motion.div initial={{ opacity: 0, y: -20 }} animate={{ opacity: 1, y: 0 }}>
           <h1 className={`text-3xl font-bold ${isLight ? 'text-[#1a2e2e]' : 'gradient-text'}`}>
-            Patient History
+            {user?.role === 'PATIENT' ? 'My medical history' : 'Patient History'}
           </h1>
-          <p className="theme-text-muted mt-2">Structured medical records &amp; visit timelines</p>
+          <p className="theme-text-muted mt-2">
+            {user?.role === 'PATIENT'
+              ? 'Your visits and care timeline'
+              : 'Structured medical records & visit timelines'}
+          </p>
         </motion.div>
       </div>
 

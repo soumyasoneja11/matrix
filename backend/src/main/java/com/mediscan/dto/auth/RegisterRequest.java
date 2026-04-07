@@ -23,6 +23,7 @@ public class RegisterRequest {
     @NotBlank(message = "Role is required")
     private String role;
     
+    /** Optional for PATIENT portal accounts */
     private String department;
     private String specialization;
 

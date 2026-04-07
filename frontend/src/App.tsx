@@ -50,31 +50,45 @@ function App() {
     );
   }
 
-  // ✅ FIX: NotificationProvider wraps ALL authenticated routes.
-  // Without this, useNotifications() in Header and TriageBoard had no
-  // context to read from — the hook either threw or returned undefined.
+  const isPatient = user.role === 'PATIENT';
+
+  if (isPatient) {
+    return (
+      <NotificationProvider>
+        <RecycleBinProvider>
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/home" element={<HomePage />} />
+            <Route path="/patient-history" element={<MainLayout><PatientHistory /></MainLayout>} />
+            <Route path="/patient/me" element={<MainLayout><PatientProfilePage /></MainLayout>} />
+            <Route path="/patient/:id" element={<MainLayout><PatientProfilePage /></MainLayout>} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </RecycleBinProvider>
+      </NotificationProvider>
+    );
+  }
+
   return (
-
     <NotificationProvider>
-    <RecycleBinProvider>
-      <Routes>
-        <Route path="/" element={<HomePage />} />
-        <Route path="/home" element={<HomePage />} />
-        <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
-        <Route path="/triage" element={<MainLayout><Dashboard /></MainLayout>} />
-        <Route path="/resource-allocation" element={<MainLayout><ResourceAllocation /></MainLayout>} />
-        <Route path="/staff-directory" element={<MainLayout><StaffDirectory /></MainLayout>} />
-        <Route path="/staff-management" element={<MainLayout><StaffManagement /></MainLayout>} />
-        <Route path="/my-worklist" element={<MainLayout><MyWorklist /></MainLayout>} />
-        <Route path="/patient-history" element={<MainLayout><PatientHistory /></MainLayout>} />
-        <Route path="/patient/:id" element={<MainLayout><PatientProfilePage /></MainLayout>} />
-        <Route path="/analytics" element={<MainLayout><Analytics /></MainLayout>} />
-        <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
-        <Route path="*" element={<Navigate to="/" replace />} />
-      </Routes>
-    </RecycleBinProvider>
+      <RecycleBinProvider>
+        <Routes>
+          <Route path="/" element={<HomePage />} />
+          <Route path="/home" element={<HomePage />} />
+          <Route path="/dashboard" element={<MainLayout><Dashboard /></MainLayout>} />
+          <Route path="/triage" element={<MainLayout><Dashboard /></MainLayout>} />
+          <Route path="/resource-allocation" element={<MainLayout><ResourceAllocation /></MainLayout>} />
+          <Route path="/staff-directory" element={<MainLayout><StaffDirectory /></MainLayout>} />
+          <Route path="/staff-management" element={<MainLayout><StaffManagement /></MainLayout>} />
+          <Route path="/my-worklist" element={<MainLayout><MyWorklist /></MainLayout>} />
+          <Route path="/patient-history" element={<MainLayout><PatientHistory /></MainLayout>} />
+          <Route path="/patient/:id" element={<MainLayout><PatientProfilePage /></MainLayout>} />
+          <Route path="/analytics" element={<MainLayout><Analytics /></MainLayout>} />
+          <Route path="/recycle-bin" element={<MainLayout><RecycleBin /></MainLayout>} />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </RecycleBinProvider>
     </NotificationProvider>
-
   );
 }
 

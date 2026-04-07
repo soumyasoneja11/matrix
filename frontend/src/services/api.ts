@@ -157,6 +157,9 @@ const api = axios.create({
 
 // Request interceptor — attach JWT token from localStorage to every request
 api.interceptors.request.use((config) => {
+  if (config.data instanceof FormData) {
+    delete (config.headers as Record<string, unknown>)['Content-Type'];
+  }
   const stored = localStorage.getItem('er_triage_user');
   if (stored) {
     try {
@@ -204,6 +207,20 @@ api.interceptors.response.use(
 );
 
 export const patientAPI = {
+  /** Multilingual STT: Gemini first, Hugging Face Whisper fallback (requires auth). */
+  transcribeVoice: async (blob: Blob, mimeType?: string): Promise<string> => {
+    const form = new FormData();
+    form.append('audio', blob, 'recording.webm');
+    form.append('mimeType', mimeType || blob.type || 'audio/webm');
+    const response = await api.post<{ text: string }>('/patients/voice/transcribe', form);
+    const payload = response.data as { text?: string };
+    return (payload?.text ?? '').trim();
+  },
+  /** PATIENT portal: own Mongo patient document */
+  getMyRecord: async () => {
+    const response = await api.get<any>('/patients/me');
+    return normalizePatient(response.data);
+  },
   getAll: async () => {
     const response = await api.get<any[]>('/patients');
     return sortPatients((response.data || []).map(normalizePatient));
@@ -322,6 +339,11 @@ export const worklistAPI = {
 export const historyAPI = {
   getAll: () => api.get<PatientHistoryRecordApi[]>('/patients/history'),
   getById: (id: string) => api.get<PatientHistoryRecordApi>(`/patients/history/${id}`),
+  /** PATIENT portal: single history record for logged-in patient */
+  getMine: async (): Promise<PatientHistoryRecordApi> => {
+    const response = await api.get<PatientHistoryRecordApi>('/patients/me/history');
+    return response.data;
+  },
 };
 
 export const authAPI = {

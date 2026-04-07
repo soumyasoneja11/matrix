@@ -4,7 +4,9 @@ import com.mediscan.dto.RegistrationRequest;
 import com.mediscan.dto.ai.ExtractionResult;
 import com.mediscan.model.Patient;
 import com.mediscan.model.PatientEvent;
+import com.mediscan.model.User;
 import com.mediscan.model.enums.PatientStatus;
+import com.mediscan.model.enums.Role;
 import com.mediscan.model.enums.TriagePriority;
 import com.mediscan.repository.PatientRepository;
 import com.mediscan.repository.PatientEventRepository;
@@ -18,6 +20,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
+import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.annotation.Validated;
@@ -170,6 +174,42 @@ public class PatientService {
     public Patient requirePatientById(@NotNull String id) {
         return patientRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Patient not found with id: " + id));
+    }
+
+    /** Logged-in PATIENT role: resolve Mongo patient record via linked id or email match. */
+    public Patient getPatientForPortalUser(Authentication auth) {
+        if (auth == null || auth.getName() == null) {
+            throw new ResourceNotFoundException("Not authenticated");
+        }
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.getRole() != Role.PATIENT) {
+            throw new AccessDeniedException("This endpoint is for patient portal accounts only");
+        }
+        if (user.getLinkedPatientId() != null) {
+            return requirePatientById(user.getLinkedPatientId());
+        }
+        String email = user.getEmail();
+        if (email == null || email.isBlank()) {
+            throw new ResourceNotFoundException("Account email is missing");
+        }
+        return patientRepository.findByEmail(email.trim().toLowerCase(Locale.ROOT))
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "No patient record linked to this email yet. It appears after your first visit."));
+    }
+
+    /** PATIENT may only open their own record; staff may open any. */
+    public Patient resolvePatientForViewer(String patientId, Authentication auth) {
+        Patient patient = requirePatientById(patientId);
+        User user = userRepository.findByUsername(auth.getName())
+                .orElseThrow(() -> new ResourceNotFoundException("User not found"));
+        if (user.getRole() == Role.PATIENT) {
+            Patient mine = getPatientForPortalUser(auth);
+            if (!mine.getId().equals(patientId)) {
+                throw new AccessDeniedException("You can only access your own medical record");
+            }
+        }
+        return patient;
     }
 
     public List<Patient> searchPatients(String query) {
